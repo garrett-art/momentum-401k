@@ -1,26 +1,22 @@
-export const config = { runtime: 'edge' };
-
-export default async function handler(req) {
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
-  }
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).end();
 
   try {
-    const { transcript, plan } = await req.json();
+    const { transcript, plan } = req.body;
 
-    const prompt = `You are analyzing a sales call transcript for a 401(k) advisor.
+    const prompt = `Analyze this 401(k) sales call transcript. Return ONLY valid JSON, no markdown.
 
-Plan: ${plan.company} (${plan.participants} participants, $${Number(plan.assets||0).toLocaleString()} in assets)
+Plan: ${plan.company} (${plan.participants} participants, $${Number(plan.assets||0).toLocaleString()} assets)
 
 Transcript:
 ${transcript}
 
-Return ONLY a JSON object with this structure, no markdown:
+Return:
 {
-  "callSummary": "2-3 sentence summary of what happened on the call",
+  "callSummary": "2-3 sentence summary",
   "interestLevel": "high|medium|low|none",
-  "keyPoints": ["key point 1", "key point 2", "key point 3"],
-  "nextSteps": "what was agreed or what should happen next, or 'none agreed'",
+  "keyPoints": ["point 1","point 2","point 3"],
+  "nextSteps": "what was agreed or none agreed",
   "objections": ["any objections raised"],
   "positives": ["any positive signals"]
 }`;
@@ -42,16 +38,9 @@ Return ONLY a JSON object with this structure, no markdown:
     const data = await response.json();
     const text = data.content?.[0]?.text || '{}';
     const clean = text.replace(/```json|```/g, '').trim();
-    const result = JSON.parse(clean);
-
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    res.status(200).json(JSON.parse(clean));
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error('transcript error:', err);
+    res.status(500).json({ error: err.message });
   }
 }

@@ -1,75 +1,46 @@
-export const config = { runtime: 'edge' };
-
-const MODEL = 'claude-sonnet-4-6';
-
 function buildPrompt(plan, settings) {
   const avg = plan.avgBalance || (plan.assets && plan.participants
     ? Math.round(Number(plan.assets) / Number(plan.participants)) : 0);
   const planType = Number(plan.participants) < 2000 && avg > 15000
     ? 'fee_benchmark' : 'admin_complexity';
+  const excessCost = planType === 'fee_benchmark'
+    ? Math.round(Number(plan.assets || 0) * (0.0128 - 0.0089)) : 0;
 
-  return `You are an expert 401(k) plan advisor preparing a prospecting analysis for ${settings.name || 'an advisor'} at ${settings.firm || 'Momentum Wealth Management'}.
+  return `You are an expert 401(k) plan advisor. Analyze this plan and return ONLY a valid JSON object, no markdown, no preamble.
 
-Analyze this plan and return a JSON object with the following structure. Return ONLY valid JSON, no markdown, no preamble.
+Plan: ${plan.company} | EIN: ${plan.ein} | Assets: $${Number(plan.assets||0).toLocaleString()} | Participants: ${plan.participants} | Avg balance: $${avg.toLocaleString()} | Provider: ${plan.provider||'Unknown'} | Model: ${planType}
 
-Plan data:
-- Company: ${plan.company}
-- EIN: ${plan.ein}
-- Assets: $${Number(plan.assets || 0).toLocaleString()}
-- Participants: ${plan.participants}
-- Average balance: $${avg.toLocaleString()}
-- Plan year: ${plan.planYear}
-- Provider: ${plan.provider || 'Unknown'}
-- Model type: ${planType}
-
-Return this exact JSON structure:
+Return this exact JSON:
 {
   "planType": "${planType}",
-  "modelRationale": "one sentence explaining why this model applies",
+  "modelRationale": "one sentence why this model applies",
   "keyMetrics": {
-    "estimatedTotalCostPct": ${planType === 'fee_benchmark' ? 1.28 : 0},
-    "estimatedTotalCostDollar": ${planType === 'fee_benchmark' ? Math.round(Number(plan.assets || 0) * 0.0128) : 0},
-    "medianComparablePct": ${planType === 'fee_benchmark' ? 0.89 : 0},
-    "excessCostDollar": ${planType === 'fee_benchmark' ? Math.round(Number(plan.assets || 0) * (0.0128 - 0.0089)) : 0}
+    "estimatedTotalCostPct": ${planType==='fee_benchmark'?1.28:0},
+    "estimatedTotalCostDollar": ${Math.round(Number(plan.assets||0)*0.0128)},
+    "medianComparablePct": ${planType==='fee_benchmark'?0.89:0},
+    "excessCostDollar": ${excessCost}
   },
-  "prospectProfile": "2-3 sentences describing who Matt is likely talking to and what they care about",
-  "postcardBridge": "the exact opening line Matt says when they pick up the phone referencing the postcard",
-  "anchorNumber": "the key number to lead with (e.g. $31,338/yr)",
-  "anchorContext": "one sentence explaining what that number means",
-  "callArc": [
-    "Step 1 description",
-    "Step 2 description",
-    "Step 3 description",
-    "Step 4 description"
-  ],
-  "talkingPoints": [
-    "talking point 1",
-    "talking point 2",
-    "talking point 3",
-    "talking point 4",
-    "talking point 5"
-  ],
-  "questionsToAsk": [
-    "question 1",
-    "question 2",
-    "question 3"
-  ],
+  "prospectProfile": "2-3 sentences about who Matt is talking to",
+  "postcardBridge": "exact opening line referencing the postcard",
+  "anchorNumber": "key number to lead with",
+  "anchorContext": "one sentence explaining that number",
+  "callArc": ["step 1","step 2","step 3","step 4"],
+  "talkingPoints": ["point 1","point 2","point 3","point 4","point 5"],
+  "questionsToAsk": ["question 1","question 2","question 3"],
   "potentialObjections": [
-    {"objection": "objection text", "response": "response text"},
-    {"objection": "objection text", "response": "response text"}
+    {"objection":"objection text","response":"response text"},
+    {"objection":"objection text","response":"response text"}
   ],
-  "erisa404Line": "one plain-spoken sentence about their personal ERISA fiduciary duty",
-  "solutionText": "2-3 sentences describing what a better plan looks like for this specific employer"
+  "erisa404Line": "one plain sentence about personal ERISA fiduciary duty",
+  "solutionText": "2-3 sentences on what a better plan looks like"
 }`;
 }
 
-export default async function handler(req) {
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
-  }
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).end();
 
   try {
-    const { plan, settings } = await req.json();
+    const { plan, settings } = req.body;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -79,26 +50,25 @@ export default async function handler(req) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: 'claude-sonnet-4-6',
         max_tokens: 2000,
         messages: [{ role: 'user', content: buildPrompt(plan, settings) }],
       }),
     });
+
+    if (!response.ok) {
+      const err = await response.text();
+      return res.status(500).json({ error: `Anthropic error: ${err}` });
+    }
 
     const data = await response.json();
     const text = data.content?.[0]?.text || '{}';
     const clean = text.replace(/```json|```/g, '').trim();
     const result = JSON.parse(clean);
 
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    res.status(200).json(result);
   } catch (err) {
     console.error('analyze error:', err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    res.status(500).json({ error: err.message });
   }
 }
