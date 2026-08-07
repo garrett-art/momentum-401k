@@ -1049,7 +1049,8 @@ function ProspectTab({plans,onAddPlans}){
 
       {results&&filtered.length===0&&(
         <div style={{textAlign:"center",padding:"40px 0",color:MUTED}}>
-          <p style={{fontSize:13}}>No plans found for the current filters. Try adjusting the size filter or adding more locations.</p>
+          <p style={{fontSize:13,marginBottom:8}}>No plans found for the current search and filters.</p>
+          <p style={{fontSize:12}}>This may mean the DOL EFAST2 API returned no matches for these locations — try adjusting your search targets or size filter.</p>
         </div>
       )}
 
