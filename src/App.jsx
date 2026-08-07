@@ -1114,6 +1114,8 @@ function LoginScreen(){
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App(){
+  const [session,setSession]=useState(null);
+  const [authLoading,setAuthLoading]=useState(true);
   const [plans,setPlans]=useState([DUMMY_PLAN]);
   const [settings,setSettings]=useState(DEFAULT_SETTINGS);
   const [loading,setLoading]=useState(true);
