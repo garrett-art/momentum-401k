@@ -1084,26 +1084,66 @@ function LoginScreen(){
   };
 
   return(
-    <div style={{minHeight:"100vh",background:FILL,display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{width:360,background:"#fff",border:`1px solid ${RULE}`,borderRadius:8,padding:32}}>
-        <div style={{textAlign:"center",marginBottom:28}}>
-          <div style={{fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,letterSpacing:".18em",textTransform:"uppercase",color:"#293132",marginBottom:6}}>
-            MOMENTUM <span style={{color:BLUE}}>WEALTH</span>
+    <div style={{
+      minHeight:"100vh",
+      background:"#29aae2",
+      backgroundImage:`
+        radial-gradient(ellipse 55% 200% at -8% 50%, rgba(252,252,252,0.72) 0%, rgba(252,252,252,0) 58%),
+        radial-gradient(ellipse 50% 200% at 108% 50%, rgba(252,252,252,0.60) 0%, rgba(252,252,252,0) 55%),
+        radial-gradient(ellipse 100% 100% at 55% 50%, #29aae2 0%, transparent 70%),
+        radial-gradient(ellipse 50% 100% at 110% 0%, #1a8bbf 0%, transparent 55%)
+      `,
+      display:"flex",alignItems:"center",justifyContent:"center",
+      fontFamily:"'IBM Plex Sans',system-ui,sans-serif",
+    }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap');`}</style>
+      <div style={{width:380,background:"#fff",borderRadius:6,boxShadow:"0 12px 48px rgba(0,0,0,0.15)",overflow:"hidden"}}>
+
+        {/* Blue top rule */}
+        <div style={{height:3,background:BLUE}}/>
+
+        <div style={{padding:"36px 36px 32px"}}>
+          {/* Wordmark */}
+          <div style={{marginBottom:28}}>
+            <div style={{fontFamily:"'Syne',sans-serif",fontSize:11,fontWeight:700,letterSpacing:".2em",textTransform:"uppercase",color:INK,marginBottom:4}}>
+              MOMENTUM <span style={{color:BLUE}}>WEALTH</span> MANAGEMENT
+            </div>
+            <div style={{fontFamily:"'Syne',sans-serif",fontSize:22,fontWeight:700,color:INK,letterSpacing:"-.02em",lineHeight:1.1}}>401(k) Pipeline</div>
           </div>
-          <div style={{fontFamily:"'Syne',sans-serif",fontSize:18,fontWeight:700,color:"#293132"}}>401(k) Pipeline</div>
+
+          {/* Email */}
+          <div style={{marginBottom:14}}>
+            <label style={{display:"block",fontFamily:"'Syne',sans-serif",fontSize:9,fontWeight:700,color:MUTED,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:4}}>Email</label>
+            <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
+              placeholder="you@momentumwealth.com"
+              style={{width:"100%",padding:"9px 11px",border:`1px solid ${RULE}`,borderRadius:4,fontFamily:"inherit",fontSize:13,color:INK,outline:"none",boxSizing:"border-box"}}
+              onFocus={e=>e.target.style.borderColor=BLUE}
+              onBlur={e=>e.target.style.borderColor=RULE}/>
+          </div>
+
+          {/* Password */}
+          <div style={{marginBottom:20}}>
+            <label style={{display:"block",fontFamily:"'Syne',sans-serif",fontSize:9,fontWeight:700,color:MUTED,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:4}}>Password</label>
+            <input type="password" value={password} onChange={e=>setPassword(e.target.value)}
+              placeholder="••••••••"
+              onKeyDown={e=>e.key==="Enter"&&signIn()}
+              style={{width:"100%",padding:"9px 11px",border:`1px solid ${RULE}`,borderRadius:4,fontFamily:"inherit",fontSize:13,color:INK,outline:"none",boxSizing:"border-box"}}
+              onFocus={e=>e.target.style.borderColor=BLUE}
+              onBlur={e=>e.target.style.borderColor=RULE}/>
+          </div>
+
+          {error&&<div style={{fontSize:12,color:RED,marginBottom:14,padding:"8px 11px",background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:4}}>{error}</div>}
+
+          <Btn onClick={signIn} full disabled={loading||!email||!password}
+            icon={loading?<Loader2 size={13} style={{animation:"spin 1s linear infinite"}}/>:undefined}>
+            {loading?"Signing in...":"Sign in"}
+          </Btn>
         </div>
-        <Field label="Email" value={email} onChange={setEmail} placeholder="you@momentumwealth.com"/>
-        <div style={{marginBottom:16}}>
-          <label style={{display:"block",fontFamily:"'Syne',sans-serif",fontSize:9,fontWeight:700,color:MUTED,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:4}}>Password</label>
-          <input type="password" value={password} onChange={e=>setPassword(e.target.value)}
-            onKeyDown={e=>e.key==="Enter"&&signIn()}
-            placeholder="••••••••"
-            style={{width:"100%",padding:"8px 10px",border:`1px solid ${RULE}`,borderRadius:4,fontFamily:"inherit",fontSize:13,color:"#293132",outline:"none"}}/>
+
+        {/* Footer */}
+        <div style={{padding:"12px 36px",borderTop:`1px solid ${RULE}`,background:FILL}}>
+          <p style={{fontSize:10,color:MUTED,margin:0,lineHeight:1.5}}>Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia.</p>
         </div>
-        {error&&<div style={{fontSize:12,color:RED,marginBottom:12,padding:"7px 10px",background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:4}}>{error}</div>}
-        <Btn onClick={signIn} full disabled={loading||!email||!password} icon={loading?<Loader2 size={13} style={{animation:"spin 1s linear infinite"}}/>:undefined}>
-          {loading?"Signing in...":"Sign in"}
-        </Btn>
       </div>
     </div>
   );
