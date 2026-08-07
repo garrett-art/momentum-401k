@@ -1157,7 +1157,7 @@ export default function App(){
   const [authLoading,setAuthLoading]=useState(true);
   const [plans,setPlans]=useState([DUMMY_PLAN]);
   const [settings,setSettings]=useState(DEFAULT_SETTINGS);
-  const [loading,setLoading]=useState(true);
+  const [loading,setLoading]=useState(false);
   const [view,setView]=useState("dashboard");
   const [navTab,setNavTab]=useState("pipeline");
   const [selected,setSelected]=useState(null);
@@ -1178,13 +1178,19 @@ export default function App(){
   },[]);
 
   const loadUserData=async(userId)=>{
-    setUserId(userId);setLoading(true);
+    _userId=userId;
     try{
-      const [p,s]=await Promise.all([dbLoadPlans(userId),dbLoadSettings(userId)]);
-      setPlans(p.length>0?p:[DUMMY_PLAN]);
+      const [p,s]=await Promise.all([
+        dbLoadPlans(userId).catch(e=>{console.error("plans load failed:",e);return [];}),
+        dbLoadSettings(userId).catch(e=>{console.error("settings load failed:",e);return null;})
+      ]);
+      setPlans(p&&p.length>0?p:[DUMMY_PLAN]);
       setSettings(s||DEFAULT_SETTINGS);
-    }catch(e){console.error("Load error:",e);}
-    finally{setLoading(false);}
+    }catch(e){
+      console.error("loadUserData error:",e);
+    }finally{
+      setLoading(false);
+    }
   };
 
   const persistPlans=async u=>{setPlans(u);if(_userId)await dbSavePlans(u,_userId);};
