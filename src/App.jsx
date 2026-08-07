@@ -4,8 +4,7 @@ import {
   Edit3, Save, X, Loader2, Phone, Mail, BarChart3, ExternalLink,
   Check, Copy, Settings, MessageSquare, ChevronDown, ChevronUp, AlertCircle
 } from "lucide-react";
-
-const API = "https://api.anthropic.com/v1/messages";
+import { supabase, dbLoadPlans, dbSavePlan, dbSavePlans, dbDeletePlan, dbLoadSettings, dbSaveSettings } from "./lib/supabase.js";
 const MODEL = "claude-sonnet-4-6";
 const BLUE="#29aae2",INK="#293132",BODY="#3d4f60",MUTED="#8a9bb0",RULE="#e2e8ed",FILL="#f5f7f9",GREEN="#16a34a",AMBER="#d97706",RED="#c0392b";
 
