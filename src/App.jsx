@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Building2, DollarSign, FileText, Plus, ChevronLeft, ChevronRight,
   Edit3, Save, X, Loader2, Phone, Mail, BarChart3, ExternalLink,
@@ -152,89 +152,159 @@ Return ONLY valid JSON:
 
 function buildClientHTML(plan,a,s){
   const avg=Number(plan.avgBalance)||Math.round(Number(plan.assets)/Number(plan.participants));
-  const findings=a.findings.map(f=>`<div class="finding"><span class="anc">${f.anchor}</span><span class="asub">${f.anchorSub}</span><div class="ftit">${f.title}</div><p class="fbod">${f.body}</p></div>`).join("");
-  const intro=a.planType==="admin_complexity"
-    ?"Running a 401(k) for a large, hourly workforce is a different challenge than most providers account for. Here is what your plan's public filing shows and where there is real room to make it work harder for your employees."
-    :"Your plan looks fine from the outside. The costs that matter most do not appear on any statement your employees see. Here is what your plan's public filing actually shows.";
-  const disc=a.planType==="fee_benchmark"
-    ?"Comparable-plan figures reflect published industry medians from the 401k Averages Book, 26th Edition, and individual plan costs vary based on services, investments, and plan design."
-    :"Industry context is drawn from the ICI/ISS MI Defined Contribution Plan Profile (2023), presented as general industry context only and not as a benchmark of this specific plan.";
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>401(k) Plan Review — ${plan.company}</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
-<style>:root{--b:#29aae2;--i:#293132;--d:#3d4f60;--m:#8a9bb0;--r:#e2e8ed;--f:#f5f7f9}*{margin:0;padding:0;box-sizing:border-box}@page{size:letter landscape;margin:.45in .6in}body{font-family:'IBM Plex Sans',sans-serif;font-weight:300;color:var(--i);background:#fff;width:9.8in;margin:0 auto;padding:.45in 0;font-size:9.5pt;line-height:1.6;-webkit-print-color-adjust:exact;print-color-adjust:exact}.hdr{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:10px;border-bottom:2.5px solid var(--b);margin-bottom:22px}.wm{font-family:'Syne',sans-serif;font-size:11pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--i)}.wm em{color:var(--b);font-style:normal}.hr{font-size:7pt;color:var(--m);font-weight:400;letter-spacing:.06em;text-align:right;text-transform:uppercase;line-height:1.7}.irow{display:flex;gap:40px;align-items:flex-start;margin-bottom:24px;padding-bottom:22px;border-bottom:1px solid var(--r)}.il{flex:1}.ey{font-size:6.8pt;text-transform:uppercase;letter-spacing:.16em;color:var(--b);font-weight:500;margin-bottom:5px}.cn{font-family:'Syne',sans-serif;font-size:19pt;font-weight:700;color:var(--i);line-height:1.1;letter-spacing:-.01em;margin-bottom:9px}.ip{font-size:9.2pt;color:var(--d);line-height:1.72;font-weight:300}.snap{display:flex;flex-direction:column;gap:14px;min-width:1.6in;padding-left:32px;border-left:1px solid var(--r)}.sl{font-size:6.5pt;text-transform:uppercase;letter-spacing:.12em;color:var(--m);font-weight:500;margin-bottom:2px}.sv{font-size:16pt;font-weight:600;color:var(--i);line-height:1;font-feature-settings:"tnum" 1;letter-spacing:-.015em}.sv.sm{font-size:10pt;padding-top:3px;letter-spacing:0;font-weight:400}.sn{font-size:6.8pt;color:var(--m);margin-top:2px;font-weight:300}.se{font-size:6.8pt;text-transform:uppercase;letter-spacing:.16em;color:var(--b);font-weight:500;margin-bottom:14px}.fg{display:flex;gap:0;margin-bottom:22px}.finding{flex:1;padding-right:28px;margin-right:28px;border-right:1px solid var(--r)}.finding:last-child{border-right:none;padding-right:0;margin-right:0}.anc{font-size:34pt;font-weight:600;color:var(--b);line-height:1;letter-spacing:-.025em;font-feature-settings:"tnum" 1;display:block;margin-bottom:3px}.asub{font-size:6.5pt;text-transform:uppercase;letter-spacing:.1em;color:var(--m);font-weight:400;display:block;margin-bottom:8px;line-height:1.5}.ftit{font-family:'Syne',sans-serif;font-size:9.5pt;font-weight:700;color:var(--i);margin-bottom:5px;line-height:1.3}.fbod{font-size:8.5pt;color:var(--d);line-height:1.72;font-weight:300}.sol{background:var(--f);padding:14px 18px;margin-bottom:20px;border-left:3px solid var(--b)}.sey{font-size:6.5pt;text-transform:uppercase;letter-spacing:.14em;color:var(--b);font-weight:500;margin-bottom:6px}.sb{font-size:9pt;color:var(--i);line-height:1.72;font-weight:400}.cta{display:flex;justify-content:space-between;align-items:flex-end;padding-top:16px;border-top:1px solid var(--r);gap:20px}.ctab{font-size:9.2pt;color:var(--i);line-height:1.72;font-weight:400}.sig{text-align:right;flex-shrink:0;line-height:1.65}.sn2{font-family:'Syne',sans-serif;font-size:10.5pt;font-weight:700;color:var(--i);display:block;margin-bottom:2px}.sl2{font-size:8pt;color:var(--d);font-weight:300;display:block}.disc{margin-top:16px;padding-top:9px;border-top:1px solid var(--r);font-size:6.2pt;color:var(--m);line-height:1.55;font-weight:300}</style></head><body>
-<div class="hdr"><div class="wm">MOMENTUM <em>WEALTH</em> MANAGEMENT</div><div class="hr">401(k) Plan Review&nbsp;&nbsp;|&nbsp;&nbsp;Prepared for Plan Fiduciary</div></div>
-<div class="irow"><div class="il"><div class="ey">Plan Review</div><div class="cn">${plan.company}</div><p class="ip">${intro}</p></div>
-<div class="snap"><div><div class="sl">Plan Assets</div><div class="sv">${fmt(Number(plan.assets))}</div></div><div><div class="sl">Participants</div><div class="sv">${Number(plan.participants).toLocaleString()}</div></div><div><div class="sl">Avg. Balance</div><div class="sv">${fmt(avg)}</div><div class="sn">per active participant</div></div><div><div class="sl">Source</div><div class="sv sm">Form 5500</div><div class="sn">DOL public filing</div></div></div></div>
-<div class="se">What we found</div>
-<div class="fg">${findings}</div>
-<div class="sol"><div class="sey">What a better version looks like</div><p class="sb">${a.solutionText}</p></div>
-<div class="cta"><p class="ctab">I\'d like to walk you through this in about 20 minutes — no presentation, no pressure. Just a straight conversation about whether there's something worth pursuing here.</p>
-<div class="sig"><span class="sn2">${s.name}${s.title?`, ${s.title}`:""}</span><span class="sl2">${s.firm}&nbsp;&nbsp;|&nbsp;&nbsp;Columbus, GA</span>${s.phone?`<span class="sl2">${s.phone}</span>`:""}${s.email?`<span class="sl2">${s.email}</span>`:""}</div></div>
-<div class="disc">This review is for informational purposes only and does not constitute investment advice or an offer of advisory services. Plan figures are drawn from publicly filed Form 5500 data and are believed accurate as of the plan year cited but are not guaranteed. ${disc} Momentum Wealth Management is registered as an investment adviser with the States of Georgia and Alabama. Registration does not imply any particular level of skill or expertise. This document does not create an advisory or fiduciary relationship. A copy of Momentum's Form ADV Part 2A is available upon request or at adviserinfo.sec.gov.</div>
+  const isFee=a.planType==="fee_benchmark";
+  const excess=a.keyMetrics?.excessCostDollar||0;
+  const assets=Number(plan.assets)||0;
+  const parts=Number(plan.participants)||1;
+  const perPart=avg>0?fmtF(Math.round(excess/parts)):"—";
+  const nm=s.name||"Matt Hightower";
+  const ph=s.phone||"[PHONE]";
+  const em=s.email||"[EMAIL]";
+  const css=`<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet"><style>:root{--blue:#29aae2;--blue-l:#eaf5fb;--ink:#293132;--body:#3d4f60;--muted:#8a9bb0;--rule:#e2e8ed;--fill:#f5f7f9;--red:#c0392b}*{margin:0;padding:0;box-sizing:border-box}@page{size:letter landscape;margin:.5in .65in}body{font-family:'IBM Plex Sans',sans-serif;font-weight:300;color:var(--ink);background:#fff;width:9.7in;margin:0 auto;padding:.5in 0;font-size:8.5pt;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}.top-rule{height:2px;background:var(--blue);margin-bottom:16px}.doc-type{font-family:'Syne',sans-serif;font-size:6.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--muted);display:block;margin-bottom:5px}.co{font-family:'Syne',sans-serif;font-size:22pt;font-weight:700;color:var(--ink);line-height:1.05;letter-spacing:-.02em;margin-bottom:8px}.co-meta{font-size:7pt;color:var(--muted);letter-spacing:.04em;white-space:nowrap;padding-bottom:14px;border-bottom:1px solid var(--rule);margin-bottom:18px}.sh{font-family:'Syne',sans-serif;font-size:9.5pt;font-weight:700;color:var(--ink);letter-spacing:.01em;margin-bottom:4px}.sh-rule{width:24px;height:2px;background:var(--blue);margin-bottom:10px}.cols{display:flex;gap:26px}.col-l{flex:0 0 5.5in}.col-r{flex:1}sup{font-size:6pt;vertical-align:super;color:var(--muted);font-weight:500;margin-left:1px}.cost-tbl{width:100%;border-collapse:collapse;margin-bottom:16px}.cost-tbl th{font-size:6pt;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:500;padding:0 8px 7px 0;text-align:left;border-bottom:1.5px solid var(--ink)}.cost-tbl th.r{text-align:right}.cost-tbl td{padding:4px 8px 4px 0;border-bottom:1px solid var(--rule);vertical-align:middle;font-size:8.5pt;white-space:nowrap}.cost-tbl td.name{white-space:normal}.cost-tbl td.r{text-align:right;font-feature-settings:"tnum" 1;font-weight:500}.cost-tbl td.gray{color:var(--muted);font-size:7.5pt}.cost-tbl tr.hi td{color:var(--ink);font-weight:500}.cost-tbl tfoot td{border-top:1.5px solid var(--ink);border-bottom:none;font-weight:600;font-size:9.5pt;padding-top:6px}.cost-tbl tfoot td.r{font-size:10pt;color:var(--blue)}.cmp-row{display:flex;align-items:center;gap:9px;margin-bottom:8px}.cmp-lbl{font-size:8.5pt;color:var(--body);flex:0 0 1.55in;font-weight:300;white-space:nowrap}.cmp-track{flex:1;height:19px;background:var(--fill);border-radius:2px;overflow:hidden}.cmp-bar{height:100%;display:flex;align-items:center;padding-left:8px;border-radius:2px}.dark{background:var(--ink)}.blue{background:var(--blue)}.mid{background:#5a9eb8}.cmp-v{font-size:8pt;font-weight:600;color:#fff;font-feature-settings:"tnum" 1;white-space:nowrap}.callout{background:var(--blue-l);padding:16px 18px;margin-bottom:18px;border-left:4px solid var(--blue)}.callout-lbl{font-size:6.5pt;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);font-weight:600;display:block;margin-bottom:5px}.callout-num{font-family:'IBM Plex Sans',sans-serif;font-size:30pt;font-weight:600;color:var(--ink);line-height:1;letter-spacing:-.03em;font-feature-settings:"tnum" 1;display:block;margin-bottom:5px;white-space:nowrap}.callout-sub{font-size:8pt;color:var(--body);line-height:1.6;font-weight:300}.pp-solo{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-bottom:18px;gap:8px}.pp-solo-lbl{font-size:9.5pt;color:var(--body);font-weight:300}.pp-solo-num{font-family:'IBM Plex Sans',sans-serif;font-size:16pt;font-weight:600;color:var(--blue);font-feature-settings:"tnum" 1;white-space:nowrap}.erisa{background:var(--blue-l);border-left:3px solid var(--blue);padding:10px 12px}.erisa-lbl{font-family:'Syne',sans-serif;font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);display:block;margin-bottom:4px}.erisa-text{font-size:8pt;color:var(--body);line-height:1.6;font-weight:300}.stat-row{display:flex;gap:0;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--rule)}.stat-cell{flex:1;padding:0 16px;border-right:1px solid var(--rule)}.stat-cell:first-child{padding-left:0}.stat-cell:last-child{border-right:none}.stat-lbl{font-size:6pt;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:500;display:block;margin-bottom:4px}.stat-val{font-family:'IBM Plex Sans',sans-serif;font-size:15pt;font-weight:600;color:var(--blue);font-feature-settings:"tnum" 1;line-height:1;display:block;white-space:nowrap}.stat-note{font-size:6.8pt;color:var(--muted);margin-top:4px;display:block;line-height:1.4}.fi{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--rule)}.fi:last-child{border-bottom:none;padding-bottom:0}.fi-num{font-family:'Syne',sans-serif;font-size:15pt;font-weight:700;color:var(--blue);line-height:1;flex-shrink:0;min-width:26px;white-space:nowrap;padding-top:1px}.fi-body{flex:1}.fi-title{font-family:'Syne',sans-serif;font-size:9pt;font-weight:700;color:var(--ink);margin-bottom:2px}.fi-text{font-size:8pt;color:var(--body);line-height:1.55;font-weight:300}.better-item{display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--rule)}.better-item:last-child{border-bottom:none;padding-bottom:0}.better-dot{width:7px;height:7px;background:var(--blue);border-radius:50%;flex-shrink:0;margin-top:3px}.better-text{font-size:8.5pt;color:var(--body);line-height:1.5;font-weight:300;flex:1}.bottom{display:flex;justify-content:space-between;align-items:flex-end;padding-top:14px;border-top:1px solid var(--rule);gap:20px;margin-top:16px}.cta{font-size:9pt;color:var(--ink);line-height:1.7;font-weight:400;flex:1}.sig{text-align:right;flex-shrink:0;line-height:1.65}.sig-name{font-family:'Syne',sans-serif;font-size:9.5pt;font-weight:700;color:var(--ink);display:block;margin-bottom:2px}.sig-line{font-size:7pt;color:var(--body);font-weight:300;display:block;white-space:nowrap}.footer{margin-top:10px;padding-top:7px;border-top:1px solid var(--rule);font-size:5.8pt;color:var(--muted);line-height:1.6}@keyframes spin{}</style>`;
+
+  if(isFee){
+    const rk=fmtF(Math.round(assets*0.0035));
+    const inv=fmtF(Math.round(assets*0.0062));
+    const adv=fmtF(Math.round(assets*0.0025));
+    const oth=fmtF(Math.round(assets*0.0006));
+    const tot=fmtF(Math.round(assets*0.0128));
+    const med=fmtF(Math.round(assets*0.0089));
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Fee Benchmark — ${plan.company}</title>${css}</head><body>
+<div class="top-rule"></div>
+<span class="doc-type">401(k) Fee Benchmark · Prepared for Plan Fiduciary</span>
+<div class="co">${plan.company}</div>
+<div class="co-meta">${plan.participants} Participants&nbsp;&nbsp;·&nbsp;&nbsp;${fmtF(assets)} in Assets&nbsp;&nbsp;·&nbsp;&nbsp;${fmtF(avg)} Avg. Balance&nbsp;&nbsp;·&nbsp;&nbsp;Form 5500&nbsp;&nbsp;·&nbsp;&nbsp;Plan Year ${plan.planYear}</div>
+<div class="cols">
+<div class="col-l">
+<div class="sh">What your plan pays today</div><div class="sh-rule"></div>
+<table class="cost-tbl"><thead><tr><th class="name">Cost component</th><th>Paid to</th><th></th><th class="r">Annual $</th><th class="r">% of assets</th></tr></thead>
+<tbody>
+<tr><td class="name">Recordkeeping &amp; administration</td><td class="gray">${plan.provider||"[Provider / TPA]"}</td><td></td><td class="r">${rk}</td><td class="r">0.35%</td></tr>
+<tr class="hi"><td class="name"><strong>Investment expenses</strong> — weighted avg.</td><td class="gray">Fund companies</td><td></td><td class="r"><strong>${inv}</strong></td><td class="r"><strong>0.62%</strong></td></tr>
+<tr><td class="name">Advisory / broker compensation</td><td class="gray">[Advisor / firm]</td><td></td><td class="r">${adv}</td><td class="r">0.25%</td></tr>
+<tr><td class="name">Other (audit, revenue sharing, wrap)</td><td class="gray">Various</td><td></td><td class="r">${oth}</td><td class="r">0.06%</td></tr>
+</tbody>
+<tfoot><tr><td class="name" colspan="2">Total all-in plan cost<sup>1</sup></td><td></td><td class="r">${tot}</td><td class="r">1.28%</td></tr></tfoot>
+</table>
+<p style="font-size:6.5pt;color:var(--muted);font-style:italic;margin-bottom:16px"><sup>1</sup> Illustrative — to be confirmed against the plan's 408(b)(2) fee disclosure.</p>
+<div class="sh">How that compares to plans your size<sup>§</sup></div><div class="sh-rule"></div>
+<div class="cmp-row"><span class="cmp-lbl">Your plan — current</span><div class="cmp-track"><div class="cmp-bar dark" style="width:91%"><span class="cmp-v">1.28%&nbsp;&nbsp;${tot}/yr</span></div></div></div>
+<div class="cmp-row"><span class="cmp-lbl">Median — comparable plans</span><div class="cmp-track"><div class="cmp-bar mid" style="width:64%"><span class="cmp-v">0.89%&nbsp;&nbsp;${med}/yr</span></div></div></div>
+<p style="font-size:6.5pt;color:var(--muted);font-style:italic;margin-top:4px"><sup>§</sup> 401k Averages Book, 26th Edition, Sections 19–20.</p>
+</div>
+<div class="col-r">
+<div class="callout"><span class="callout-lbl">Difference vs. median comparable plan</span><span class="callout-num">${fmtF(excess)}/yr</span><p class="callout-sub">paid from participant account balances — not from the practice budget. It doesn't appear on any statement. It quietly reduces every balance, every year.</p></div>
+<div class="pp-solo"><span class="pp-solo-lbl">Back in each account, per year</span><span class="pp-solo-num">${perPart}</span></div>
+<div class="erisa"><span class="erisa-lbl">A note on your fiduciary responsibility</span><p class="erisa-text">Under ERISA, ensuring your plan's fees are reasonable is your personal obligation — not the practice's. A documented independent benchmark, like this one, kept in your plan file, is exactly what a prudent process looks like. You're already most of the way there.</p></div>
+</div></div>
+<div class="bottom"><p class="cta">I'd like to walk you through this in about 20 minutes — no presentation, no pressure. Just a straight conversation about whether there's something worth pursuing here.</p>
+<div class="sig"><span class="sig-name">${nm}</span><span class="sig-line">Momentum Wealth Management&nbsp;&nbsp;·&nbsp;&nbsp;Columbus, GA</span><span class="sig-line">${ph}&nbsp;&nbsp;·&nbsp;&nbsp;${em}</span></div></div>
+<div class="footer">Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document is for informational purposes only and does not constitute investment advice · Form ADV Part 2A at adviserinfo.sec.gov</div>
 </body></html>`;
+  } else {
+    // Admin complexity
+    const findings=(a.findings&&a.findings.length>0)?a.findings:[
+      {title:"This plan was built for a different kind of workforce",body:"Most bundled recordkeepers price primarily on assets. For a plan with "+plan.participants+" participants, the infrastructure may not fit your workforce."},
+      {title:"ERISA requires an annual independent audit at your plan's size",body:"Plans with 100 or more eligible participants must include an independent auditor's opinion with their Form 5500 every year."},
+      {title:"High turnover creates admin work most providers don't absorb",body:"A cycling workforce means a constant stream of former employees leaving small balances behind — each requiring DOL-mandated notices, searches, and processing."}
+    ];
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Plan Review — ${plan.company}</title>${css}</head><body>
+<div class="top-rule"></div>
+<span class="doc-type">401(k) Plan Administrative Review · Prepared for Plan Fiduciary</span>
+<div class="co">${plan.company}</div>
+<div class="co-meta">${plan.participants} Participants&nbsp;&nbsp;·&nbsp;&nbsp;${fmtF(assets)} in Assets&nbsp;&nbsp;·&nbsp;&nbsp;${fmtF(avg)} Avg. Balance&nbsp;&nbsp;·&nbsp;&nbsp;Form 5500&nbsp;&nbsp;·&nbsp;&nbsp;Plan Year ${plan.planYear}</div>
+<div class="cols">
+<div class="col-l">
+<div class="sh">Your plan at a glance</div><div class="sh-rule"></div>
+<div class="stat-row">
+<div class="stat-cell"><span class="stat-lbl">Avg. Balance per Participant</span><span class="stat-val">${fmtF(avg)}</span><span class="stat-note">Relative to plans this asset size<sup>1</sup></span></div>
+<div class="stat-cell"><span class="stat-lbl">Active Participants</span><span class="stat-val">${Number(plan.participants).toLocaleString()}</span><span class="stat-note">ERISA large-plan filing if 100+</span></div>
+<div class="stat-cell"><span class="stat-lbl">Plan Assets</span><span class="stat-val">${fmtF(assets)}</span><span class="stat-note">Form 5500, ${plan.planYear}</span></div>
+<div class="stat-cell"><span class="stat-lbl">Participants per $1M</span><span class="stat-val">${assets>0?Math.round(parts/(assets/1e6)).toLocaleString():"—"}</span><span class="stat-note">Signals structural fit</span></div>
+</div>
+<div class="sh">What we found</div><div class="sh-rule"></div>
+${findings.slice(0,3).map((f,i)=>`<div class="fi"><span class="fi-num">0${i+1}</span><div class="fi-body"><div class="fi-title">${f.title}</div><p class="fi-text">${f.body||""}</p></div></div>`).join("")}
+</div>
+<div class="col-r">
+<div class="callout"><span class="callout-lbl">The number that tells the story</span><span class="callout-num">${fmtF(avg)}</span><p class="callout-sub">Average employee savings. On a well-matched plan with auto-enrollment and better structure, that number is significantly higher — without the company contributing a dollar more.</p></div>
+<div class="sh" style="margin-top:4px">What a better plan looks like</div><div class="sh-rule"></div>
+${["Payroll integration that enrolls new hires automatically — no manual processing at every hire and termination","ERISA §3(16) fiduciary support that absorbs notices, searches, and small-balance processing","Pricing built for a headcount-heavy plan — not one that penalizes you for having more employees than assets","Auto-enrollment that closes the participation gap from day one"].map(t=>`<div class="better-item"><div class="better-dot"></div><p class="better-text">${t}</p></div>`).join("")}
+<div class="erisa" style="margin-top:14px"><span class="erisa-lbl">A note on your fiduciary responsibility</span><p class="erisa-text">Under ERISA, the obligation to run this plan prudently is yours personally — not the company's. A documented review of whether the plan still fits your workforce is exactly what prudent oversight looks like. This document is that review. Keep it in your plan file.</p></div>
+</div></div>
+<div class="bottom"><p class="cta">I'd like to walk you through this in about 20 minutes — no presentation, no pressure. Just a straight conversation about whether there's something worth pursuing here.</p>
+<div class="sig"><span class="sig-name">${nm}</span><span class="sig-line">Momentum Wealth Management&nbsp;&nbsp;·&nbsp;&nbsp;Columbus, GA</span><span class="sig-line">${ph}&nbsp;&nbsp;·&nbsp;&nbsp;${em}</span></div></div>
+<div class="footer"><sup>1</sup> ICI/ISS MI Defined Contribution Plan Profile (2023), presented as general context only.&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document is for informational purposes only · Form ADV Part 2A at adviserinfo.sec.gov</div>
+</body></html>`;
+  }
 }
 
 function buildInternalHTML(plan,a,s){
   const avg=Number(plan.avgBalance)||Math.round(Number(plan.assets)/Number(plan.participants));
-  const cost=a.planType==="fee_benchmark"&&a.keyMetrics.excessCostDollar>0?`<div class="mets"><div class="m"><div class="ml">Est. Total Cost</div><div class="mv">${fmtPct(a.keyMetrics.estimatedTotalCostPct)}</div><div class="ms">${fmtF(a.keyMetrics.estimatedTotalCostDollar)}/yr</div></div><div class="m"><div class="ml">Median Comparable</div><div class="mv">${fmtPct(a.keyMetrics.medianComparablePct)}</div><div class="ms">401k Averages Book, 26th Ed.</div></div><div class="m al"><div class="ml">Excess Annual Cost</div><div class="mv">${fmtF(a.keyMetrics.excessCostDollar)}</div><div class="ms">from participant accounts</div></div></div>`:"";
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Internal Brief — ${plan.company}</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
-<style>:root{--b:#29aae2;--i:#293132;--d:#3d4f60;--m:#8a9bb0;--r:#e2e8ed;--f:#f5f7f9;--red:#c0392b;--redl:#fef2f2}*{margin:0;padding:0;box-sizing:border-box}@page{size:letter;margin:.5in}body{font-family:'IBM Plex Sans',sans-serif;font-weight:300;color:var(--i);background:#fff;width:7.5in;margin:0 auto;padding:.5in 0;font-size:9pt;line-height:1.6;-webkit-print-color-adjust:exact;print-color-adjust:exact}.hdr{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:10px;border-bottom:2.5px solid var(--b);margin-bottom:16px}.wm{font-family:'Syne',sans-serif;font-size:11pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase}.wm em{color:var(--b);font-style:normal}.hr{font-size:7pt;color:var(--m);text-transform:uppercase;letter-spacing:.06em}.bdg{display:inline-block;padding:2px 8px;border-radius:3px;font-size:7pt;font-weight:500;letter-spacing:.08em;text-transform:uppercase;margin-left:10px;vertical-align:middle}.fee{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}.adm{background:#fef3c7;color:#d97706;border:1px solid #fde68a}.co{font-family:'Syne',sans-serif;font-size:17pt;font-weight:700;margin-bottom:3px}.rat{font-size:8pt;color:var(--m);font-style:italic;margin-bottom:12px}.snap{display:flex;border:1px solid var(--r);border-left:3px solid var(--b);margin-bottom:12px}.sc{flex:1;padding:7px 11px;border-right:1px solid var(--r)}.sc:last-child{border-right:none}.sl{font-size:6.5pt;text-transform:uppercase;letter-spacing:.1em;color:var(--m);font-weight:500}.sv{font-size:12pt;font-weight:600;font-feature-settings:"tnum" 1;margin-top:2px}.mets{display:flex;gap:10px;margin-bottom:12px}.m{flex:1;padding:9px 11px;background:var(--f);border-left:3px solid var(--b)}.m.al{background:var(--redl);border-left-color:var(--red)}.ml{font-size:6.5pt;text-transform:uppercase;letter-spacing:.1em;color:var(--m);font-weight:500}.mv{font-size:14pt;font-weight:600;font-feature-settings:"tnum" 1;margin:2px 0 1px}.m.al .mv{color:var(--red)}.ms{font-size:6.8pt;color:var(--m)}.anb{background:var(--f);border-left:3px solid var(--b);padding:8px 12px;margin-bottom:12px;display:flex;align-items:baseline;gap:12px}.anbig{font-size:22pt;font-weight:600;color:var(--b);font-feature-settings:"tnum" 1;letter-spacing:-.02em}.anctx{font-size:8.5pt;color:var(--d)}.erisa{background:#fffbeb;border-left:3px solid #d97706;padding:8px 12px;font-size:8.5pt;color:var(--i);margin-bottom:12px;font-style:italic}h3{font-family:'Syne',sans-serif;font-size:7pt;text-transform:uppercase;letter-spacing:.14em;color:var(--b);font-weight:700;border-bottom:1px solid var(--r);padding-bottom:3px;margin:12px 0 7px}.tx{font-size:8.5pt;color:var(--d);line-height:1.7;margin-bottom:3px}.hl{background:var(--f);border-left:3px solid var(--b);padding:7px 11px;font-size:8.5pt;color:var(--i);margin-bottom:3px}ul{margin:0 0 4px 16px}li{font-size:8.5pt;color:var(--d);line-height:1.72;margin-bottom:3px}li b{color:var(--i)}.two{display:flex;gap:20px}.col{flex:1}.oq{font-size:8.5pt;color:var(--i);font-weight:500;margin-bottom:2px}.oa{font-size:8.5pt;color:var(--d);margin-bottom:7px;padding-left:10px;border-left:2px solid var(--r)}.foot{margin-top:16px;padding-top:8px;border-top:1px solid var(--r);font-size:6.8pt;color:var(--m);display:flex;justify-content:space-between}</style></head><body>
-<div class="hdr"><div class="wm">MOMENTUM <em>WEALTH</em> MANAGEMENT</div><span class="hr">Internal Brief — Confidential</span></div>
-<div class="co">${plan.company}<span class="bdg ${a.planType==="fee_benchmark"?"fee":"adm"}">${a.planType==="fee_benchmark"?"Fee Benchmark":"Admin Complexity"}</span></div>
-<div class="rat">${a.modelRationale}</div>
-<div class="snap"><div class="sc"><div class="sl">Assets</div><div class="sv">${fmtF(Number(plan.assets))}</div></div><div class="sc"><div class="sl">Participants</div><div class="sv">${Number(plan.participants).toLocaleString()}</div></div><div class="sc"><div class="sl">Avg. Balance</div><div class="sv">${fmtF(avg)}</div></div><div class="sc"><div class="sl">Plan Year</div><div class="sv">${plan.planYear}</div></div><div class="sc"><div class="sl">Provider</div><div class="sv" style="font-size:9pt;padding-top:2px">${plan.provider||"Unknown"}</div></div></div>
-${cost}
-<h3>Prospect Profile</h3><p class="tx">${a.prospectProfile}</p>
-<h3>Call Opening — Postcard Bridge</h3><p class="hl">${a.postcardBridge}</p>
-<h3>Lead With This Number</h3><div class="anb"><span class="anbig">${a.anchorNumber}</span><span class="anctx">${a.anchorContext}</span></div>
-<h3>ERISA §404(a) — Personal Liability</h3><p class="erisa">${a.erisa404Line}</p>
-<div class="two">
-<div class="col"><h3>Call Sequence</h3><ul>${a.callArc.map((c,i)=>`<li><b>Step ${i+1}:</b> ${c}</li>`).join("")}</ul><h3>Talking Points</h3><ul>${a.talkingPoints.map(t=>`<li>${t}</li>`).join("")}</ul><h3>Questions to Ask</h3><ul>${a.questionsToAsk.map(q=>`<li>${q}</li>`).join("")}</ul></div>
-<div class="col"><h3>Key Findings</h3><ul>${a.findings.map(f=>`<li><b>${f.anchor}</b> — ${f.title}</li>`).join("")}</ul><h3>Potential Objections</h3>${a.potentialObjections.map(o=>`<div class="oq">"${o.objection}"</div><div class="oa">${o.response}</div>`).join("")}</div>
+  const isFee=a.planType==="fee_benchmark";
+  const excess=a.keyMetrics?.excessCostDollar||0;
+  const assets=Number(plan.assets)||0;
+  const parts=Number(plan.participants)||1;
+  const nm=s.name||"Matt Hightower";
+  const css=`<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet"><style>:root{--blue:#29aae2;--blue-l:#eaf5fb;--ink:#293132;--body:#3d4f60;--muted:#8a9bb0;--rule:#e2e8ed;--fill:#f5f7f9}*{margin:0;padding:0;box-sizing:border-box}@page{size:letter;margin:.52in .62in}body{font-family:'IBM Plex Sans',sans-serif;font-weight:300;color:var(--ink);background:#fff;width:7.26in;margin:0 auto;padding:.52in 0;font-size:9pt;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}.top-rule{height:2px;background:var(--blue);margin-bottom:16px}.doc-type{font-family:'Syne',sans-serif;font-size:6.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--muted);display:block;margin-bottom:5px}.co{font-family:'Syne',sans-serif;font-size:20pt;font-weight:700;color:var(--ink);line-height:1.05;letter-spacing:-.02em;margin-bottom:4px}.co-meta{font-size:7pt;color:var(--muted);letter-spacing:.04em;white-space:nowrap;padding-bottom:14px;border-bottom:1px solid var(--rule);margin-bottom:18px}.sh{font-family:'Syne',sans-serif;font-size:9.5pt;font-weight:700;color:var(--ink);letter-spacing:.01em;margin-bottom:4px}.sh-rule{width:24px;height:2px;background:var(--blue);margin-bottom:10px}.profile{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--rule)}.callout{background:var(--blue-l);padding:14px 16px;margin-bottom:18px;border-left:4px solid var(--blue)}.callout-lbl{font-size:6.5pt;text-transform:uppercase;letter-spacing:.12em;color:var(--blue);font-weight:600;display:block;margin-bottom:5px}.callout-num{font-family:'IBM Plex Sans',sans-serif;font-size:26pt;font-weight:600;color:var(--ink);line-height:1;letter-spacing:-.03em;font-feature-settings:"tnum" 1;display:block;margin-bottom:5px;white-space:nowrap}.callout-sub{font-size:8.5pt;color:var(--body);line-height:1.6;font-weight:300}.opening{background:var(--blue-l);border-left:3px solid var(--blue);padding:12px 16px;margin-bottom:18px}.opening-text{font-size:9.5pt;color:var(--ink);line-height:1.65;font-weight:400;font-style:italic}.seq{display:flex;flex-direction:column;margin-bottom:18px}.step{display:flex;gap:14px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--rule)}.step:last-child{border-bottom:none;padding-bottom:0}.step-n{font-family:'Syne',sans-serif;font-size:18pt;font-weight:700;color:var(--blue);line-height:1;min-width:26px;flex-shrink:0}.step-body{flex:1;padding-top:2px}.step-t{font-family:'Syne',sans-serif;font-size:9.5pt;font-weight:700;color:var(--ink);margin-bottom:2px}.step-sub{font-size:8.5pt;color:var(--body);font-weight:300;line-height:1.55}.cost-ctx{display:flex;gap:14px;align-items:baseline;padding:8px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-bottom:16px;font-size:8.5pt;color:var(--body)}.p2co{font-family:'Syne',sans-serif;font-size:11pt;font-weight:700;color:var(--ink);margin-bottom:2px}.p2meta{font-size:7pt;color:var(--muted);padding-bottom:14px;border-bottom:1px solid var(--rule);margin-bottom:20px}.story{background:var(--blue-l);border-left:3px solid var(--blue);padding:14px 18px;margin-bottom:22px}.story-text{font-size:10.5pt;color:var(--ink);line-height:1.85;font-weight:300;font-style:italic}.listen-table{width:100%;border-collapse:collapse;margin-bottom:22px}.listen-table tr{border-bottom:1px solid var(--rule)}.listen-table tr:last-child{border-bottom:none}.listen-table td{padding:10px 0;vertical-align:top}.listen-sig{font-size:9pt;font-weight:500;color:var(--ink);width:2.6in;padding-right:18px;font-style:italic}.listen-why{font-size:9pt;color:var(--body);font-weight:300;line-height:1.6}.two{display:flex;gap:24px;margin-bottom:20px}.col-h{flex:1}.ql{list-style:none;margin:0;padding:0;counter-reset:q}.ql li{font-size:9pt;color:var(--body);line-height:1.55;font-weight:300;padding:7px 0;border-bottom:1px solid var(--rule);display:flex;gap:10px;align-items:baseline}.ql li:last-child{border-bottom:none;padding-bottom:0}.ql li::before{counter-increment:q;content:counter(q);font-family:'Syne',sans-serif;font-size:8.5pt;font-weight:700;color:var(--blue);flex-shrink:0;min-width:12px}.obj-block{padding:7px 0;border-bottom:1px solid var(--rule)}.obj-block:last-child{border-bottom:none;padding-bottom:0}.obj-q{font-size:9pt;color:var(--ink);font-weight:500;font-style:italic;margin-bottom:3px}.obj-a{font-size:9pt;color:var(--body);line-height:1.55;font-weight:300}.footer{margin-top:14px;padding-top:9px;border-top:1px solid var(--rule);font-size:5.8pt;color:var(--muted);line-height:1.6}.bdg{display:inline-block;padding:1px 7px;border-radius:3px;font-size:6.5pt;font-weight:500;letter-spacing:.08em;text-transform:uppercase;margin-left:8px;vertical-align:middle}.fee{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}.adm{background:#fef3c7;color:#d97706;border:1px solid #fde68a}</style>`;
+
+  const callArc=a.callArc&&a.callArc.length>0?a.callArc:[
+    "Reference the postcard, then land the key number — let it sit",
+    "Make it concrete — translate the numbers to what it means per person",
+    "Name the personal ERISA liability — once, plainly, then move on",
+    "Keep the ask small — offer to send the one-page summary"
+  ];
+
+  const objections=a.potentialObjections&&a.potentialObjections.length>0?a.potentialObjections:[
+    {objection:"We're happy with our current provider.",response:"All I'm offering is a clear look at the numbers — if everything checks out, this will be a short conversation."},
+    {objection:"This sounds like a lot of work.",response:"A well-run transition typically reduces your team's ongoing workload. I'm not asking you to decide anything today."}
+  ];
+
+  const questions=a.questionsToAsk&&a.questionsToAsk.length>0?a.questionsToAsk:[
+    "When did you last receive an independent benchmark of your plan's fees?",
+    "Do you know what your current provider is being paid from plan assets?",
+    "Has anyone done a formal review of the plan in the last few years?"
+  ];
+
+  const profile=a.prospectProfile||"Most likely the decision-maker responsible for the plan. They haven't had a reason to look closely at it — nobody has flagged a problem.";
+  const anchor=a.anchorNumber||(isFee?fmtF(excess)+"/yr":fmtF(avg));
+  const anchorCtx=a.anchorContext||(isFee?"Estimated excess annual cost vs. comparable plans":"Average employee savings — reflects a structural mismatch");
+  const bridge=a.postcardBridge||"I sent you something in the mail a little while back about your 401(k) — did you happen to see it?";
+  const badge=isFee?`<span class="bdg fee">Fee Benchmark</span>`:`<span class="bdg adm">Admin Complexity</span>`;
+  const costCtx=isFee?`<div class="cost-ctx"><span style="color:var(--muted)">Estimated all-in cost</span>&nbsp;&nbsp;<strong style="color:var(--ink)">${fmtPct(a.keyMetrics?.estimatedTotalCostPct)}</strong>&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:var(--muted)">Median comparable</span>&nbsp;&nbsp;<strong style="color:var(--ink)">${fmtPct(a.keyMetrics?.medianComparablePct)}</strong>&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:var(--muted);font-style:italic">401k Averages Book, 26th Ed.</span></div>`:"";
+
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Internal Brief — ${plan.company}</title>${css}</head><body>
+<div style="page-break-after:always;break-after:page">
+<div class="top-rule"></div>
+<span class="doc-type">Internal Call Brief · Confidential</span>
+<div class="co">${plan.company}${badge}</div>
+<div class="co-meta">${plan.participants} Participants&nbsp;&nbsp;·&nbsp;&nbsp;${fmtF(assets)} in Assets&nbsp;&nbsp;·&nbsp;&nbsp;${fmtF(avg)} Avg. Balance&nbsp;&nbsp;·&nbsp;&nbsp;Plan Year ${plan.planYear}&nbsp;&nbsp;·&nbsp;&nbsp;Provider: ${plan.provider||"Not on file"}</div>
+<div class="profile"><div class="sh">Who you're talking to</div><div class="sh-rule"></div><p style="font-size:9pt;color:var(--body);line-height:1.65;font-weight:300">${profile}</p></div>
+<div class="callout"><span class="callout-lbl">Lead with this</span><span class="callout-num">${anchor}</span><p class="callout-sub">${anchorCtx}</p></div>
+<div class="sh">Call opening</div><div class="sh-rule"></div>
+<div class="opening" style="margin-bottom:18px"><p class="opening-text">"${bridge}"</p></div>
+<div class="sh">The call</div><div class="sh-rule"></div>
+<div class="seq">${callArc.map((step,i)=>`<div class="step"><span class="step-n">${i+1}</span><div class="step-body"><div class="step-t">Step ${i+1}</div><div class="step-sub">${step}</div></div></div>`).join("")}</div>
+${costCtx}
 </div>
-${plan.notes?`<h3>Notes</h3><p class="tx">${plan.notes}</p>`:""}
-<div class="foot"><span>${s.firm} — Internal Use Only</span><span>Generated ${new Date().toLocaleDateString()}</span></div>
+
+<div class="top-rule"></div>
+<div class="p2co">${plan.company}</div>
+<div class="p2meta">If the call goes long</div>
+<div class="sh">What to listen for</div><div class="sh-rule"></div>
+<table class="listen-table">
+<tr><td class="listen-sig">"We haven't had any problems with it."</td><td class="listen-why">No problems and working well for your employees aren't the same thing. Go deeper on what they've actually reviewed recently.</td></tr>
+<tr><td class="listen-sig">"Our advisor handles the plan."</td><td class="listen-why">Ask when they last received an independent benchmark from that advisor. The advisor has no incentive to show them a comparison that might cost them the relationship.</td></tr>
+<tr><td class="listen-sig">"I'd need to loop someone else in."</td><td class="listen-why">Offer the one-pager as the leave-behind. Ask who, and whether a short call with all of them makes sense.</td></tr>
+<tr><td class="listen-sig">"This sounds like a lot of work."</td><td class="listen-why">A well-run transition is nearly invisible to participants. Assets transfer intact. The disruption is minimal.</td></tr>
+</table>
+<div class="two">
+<div class="col-h"><div class="sh">Questions</div><div class="sh-rule"></div><ul class="ql">${questions.map(q=>`<li>${q}</li>`).join("")}</ul></div>
+<div class="col-h"><div class="sh">Objections</div><div class="sh-rule"></div>${objections.map(o=>`<div class="obj-block"><div class="obj-q">"${o.objection}"</div><div class="obj-a">${o.response}</div></div>`).join("")}</div>
+</div>
+<div class="footer">Momentum Wealth Management&nbsp;&nbsp;·&nbsp;&nbsp;Internal Use Only&nbsp;&nbsp;·&nbsp;&nbsp;Not for distribution&nbsp;&nbsp;·&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable</div>
 </body></html>`;
 }
 
-// ─── UI Primitives ────────────────────────────────────────────────────────────
-
-function Badge({status}){const c=STATUSES[status]||STATUSES.new;return <span style={{display:"inline-block",padding:"2px 10px",borderRadius:20,fontSize:11,fontWeight:500,background:c.bg,color:c.color}}>{c.label}</span>;}
-
-function Btn({children,onClick,variant="primary",small,disabled,icon,full}){
-  const base={display:"inline-flex",alignItems:"center",gap:6,cursor:disabled?"not-allowed":"pointer",fontFamily:"inherit",fontWeight:500,border:"none",borderRadius:6,fontSize:small?11:13,padding:small?"4px 10px":"8px 16px",opacity:disabled?0.5:1,transition:"opacity 0.15s",width:full?"100%":undefined,justifyContent:full?"center":undefined};
-  const v={primary:{...base,background:BLUE,color:"#fff"},secondary:{...base,background:FILL,color:INK,border:`1px solid ${RULE}`},ghost:{...base,background:"transparent",color:BODY},green:{...base,background:"#f0fdf4",color:GREEN,border:"1px solid #bbf7d0"}};
-  return <button style={v[variant]||v.primary} onClick={onClick} disabled={disabled}>{icon}{children}</button>;
-}
-
-function Field({label,value,onChange,type="text",placeholder,half,third}){
-  const flex=third?"0 0 calc(33% - 8px)":half?"0 0 calc(50% - 8px)":"1 0 100%";
-  const lbl={display:"block",fontFamily:"'Syne',sans-serif",fontSize:9,fontWeight:700,color:MUTED,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:4};
-  const inp={width:"100%",padding:"7px 10px",border:`1px solid ${RULE}`,borderRadius:6,fontFamily:"inherit",fontSize:13,color:INK,background:"#fff",outline:"none"};
-  return(
-    <div style={{flex,minWidth:0}}>
-      {label&&<label style={lbl}>{label}</label>}
-      {type==="textarea"?<textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{...inp,resize:"vertical",minHeight:70}}/>
-      :type==="select"?<select value={value} onChange={e=>onChange(e.target.value)} style={inp}>{Object.entries(STATUSES).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select>
-      :<input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={inp}/>}
-    </div>
-  );
-}
-
-function Card({children,style}){return <div style={{background:"#fff",border:`1px solid ${RULE}`,borderRadius:4,padding:18,...style}}>{children}</div>;}
-
-function SectionHead({children,action}){
-  return(
-    <div style={{marginBottom:12}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
-        <h3 style={{fontFamily:"'Syne',sans-serif",fontSize:13,fontWeight:700,color:INK,letterSpacing:".01em",margin:0}}>{children}</h3>
-        {action&&<div style={{paddingTop:2}}>{action}</div>}
-      </div>
-      <div style={{width:24,height:2,background:BLUE,marginBottom:10}}></div>
-    </div>
-  );
-}
 
 function CopyBtn({text}){
   const [ok,setOk]=useState(false);
@@ -1164,6 +1234,7 @@ function LoginScreen(){
 export default function App(){
   const [session,setSession]=useState(null);
   const [authLoading,setAuthLoading]=useState(true);
+  const userIdRef=useRef(null);
   const [plans,setPlans]=useState([]);
   const [settings,setSettings]=useState(DEFAULT_SETTINGS);
   const [loading,setLoading]=useState(false);
@@ -1178,11 +1249,13 @@ export default function App(){
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
       setSession(session);
+      userIdRef.current=session?.user?.id||null;
       setAuthLoading(false);
       if(session){loadUserData(session.user.id);}
     });
     const {data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{
       setSession(session);
+      userIdRef.current=session?.user?.id||null;
       if(session){loadUserData(session.user.id);}
       else{setPlans([]);setSettings(DEFAULT_SETTINGS);}
     });
@@ -1204,20 +1277,20 @@ export default function App(){
     }
   };
 
-  const persistPlans=async u=>{setPlans(u);const uid=session?.user?.id;if(uid)await dbSavePlans(u,uid);};
+  const persistPlans=async u=>{setPlans(u);const uid=userIdRef.current;if(uid){try{await dbSavePlans(u,uid);}catch(e){console.error("Save plans error:",e);}}};
   const handleAddPlans=async toAdd=>{
     const next=[...plans,...toAdd];
     await persistPlans(next);
     setNavTab("pipeline");
     setView("dashboard");
   };
-  const persistSettings=async s=>{setSettings(s);const uid=session?.user?.id;if(uid)await dbSaveSettings(s,uid);setSavedMsg(true);setTimeout(()=>setSavedMsg(false),2500);};
+  const persistSettings=async s=>{setSettings(s);const uid=userIdRef.current;if(uid){try{await dbSaveSettings(s,uid);}catch(e){console.error("Save settings error:",e);}}setSavedMsg(true);setTimeout(()=>setSavedMsg(false),2500);};
   const handleSave=async p=>{
     const n=plans.find(x=>x.id===p.id)?plans.map(x=>x.id===p.id?p:x):[...plans,p];
-    setPlans(n);const uid=session?.user?.id;if(uid)await dbSavePlan(p,uid);setSelected(p);setView("detail");
+    setPlans(n);const uid=userIdRef.current;if(uid){try{await dbSavePlan(p,uid);}catch(e){console.error("Save plan error:",e);}}setSelected(p);setView("detail");
   };
   const handleDelete=async()=>{
-    const uid=session?.user?.id;if(uid&&live)await dbDeletePlan(live.id,uid);
+    const uid=userIdRef.current;if(uid&&live){try{await dbDeletePlan(live.id,uid);}catch(e){console.error("Delete error:",e);}}
     const n=plans.filter(p=>p.id!==live?.id);setPlans(n);setSelected(null);setView("dashboard");
   };
   const handleUpdate=async p=>{const n=plans.map(x=>x.id===p.id?p:x);await persistPlans(n);setSelected(p);};
