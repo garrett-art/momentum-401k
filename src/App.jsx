@@ -1170,6 +1170,9 @@ export default function App(){
   const [navTab,setNavTab]=useState("pipeline");
   const [selected,setSelected]=useState(null);
   const [savedMsg,setSavedMsg]=useState(false);
+  const [prospectTargets,setProspectTargets]=useState(DEFAULT_TARGETS);
+  const [prospectSizeFilter,setProspectSizeFilter]=useState("all");
+  const [prospectResults,setProspectResults]=useState(null);
 
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
