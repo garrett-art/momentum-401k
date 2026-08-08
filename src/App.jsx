@@ -440,7 +440,7 @@ function PlanDetail({plan,onBack,onUpdate,onEdit,settings}){
     try{
       const r=await analyzePlan(plan,settings);
       onUpdate({...plan,analysis:{...r,internalHtml:buildInternalHTML(plan,r,settings),clientHtml:buildClientHTML(plan,r,settings)}});
-    }catch{setGenErr("Generation failed. Check your connection and try again.");}
+    }catch(e){setGenErr(e.message||"Generation failed. Check your connection and try again.");}
     finally{setGenerating(false);}
   };
 
