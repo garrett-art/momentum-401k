@@ -1,1 +1,5 @@
+node_modules
 .env.local
+*.csv
+*.zip
+.DS_Store

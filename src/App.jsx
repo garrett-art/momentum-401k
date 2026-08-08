@@ -850,53 +850,10 @@ const MOCK_RESULTS=[
   {ein:"58-2345020",company:"W.C. Bradley Co. Affiliates",assets:22000000,participants:284,avgBalance:77465,planYear:2024,provider:"Fidelity",address:"1017 Front Ave",city:"Columbus",state:"GA",zip:"31901",adminName:"W.C. Bradley Co. Affiliates",adminPhone:"(706) 571-6000"},
 ];
 
-function parseEFAST2Hit(hit){
-  const s=hit._source||hit||{};
-  const assets=parseFloat(s.net_assets||s.tot_assets_eoy_amt||s.total_assets||0);
-  const participants=parseInt(s.tot_partcp_eoy_cnt||s.tot_active_partcp_cnt||0,10);
-  const avgBalance=participants>0?Math.round(assets/participants):0;
-  return {
-    ein:s.sponsor_ein||s.spons_ein||'',
-    company:s.sponsor_dfe_name||s.plan_name||s.spons_dfe_name||'',
-    assets,participants,avgBalance,
-    planYear:(s.plan_year_begin_date||s.py_start_date||'').slice(0,4),
-    provider:'',
-    address:s.spons_us_address1||s.spons_us_addr1||'',
-    city:s.spons_us_city||'',
-    state:s.spons_us_state||'',
-    zip:(s.spons_us_zip||s.spons_zip||'').toString().slice(0,5),
-    adminName:s.plan_admin_name||s.sponsor_dfe_name||'',
-    adminPhone:s.spons_phone_num||'',
-  };
-}
-
 async function searchEFAST2(targets){
-  // Call DOL EFAST2 directly from the browser — works because DOL allows browser requests
-  // Server-side calls from cloud providers are blocked by DOL, so we skip the proxy
-  const allHits=[];
-  const seenEINs=new Set();
-  for(const target of targets){
-    try{
-      const q=target.type==="zip"
-        ?`spons_us_zip:${target.value}`
-        :`spons_us_city:"${target.value}" AND spons_us_state:${target.state}`;
-      const params=new URLSearchParams({
-        q,sort_by:"net_assets",sort_order:"desc",size:"25",
-        dateRange:"custom",startDate:"2022-01-01",endDate:"2024-12-31"
-      });
-      const res=await fetch(`https://efts.dol.gov/EFTS/hits?${params}`);
-      if(!res.ok) continue;
-      const data=await res.json();
-      const hits=data.hits?.hits||[];
-      for(const hit of hits){
-        const plan=parseEFAST2Hit(hit);
-        if(plan.ein&&!seenEINs.has(plan.ein)&&plan.assets>0&&plan.company){
-          seenEINs.add(plan.ein);allHits.push(plan);
-        }
-      }
-    }catch(e){console.error(`EFAST2 target ${JSON.stringify(target)} failed:`,e);}
-  }
-  return allHits.sort((a,b)=>b.assets-a.assets);
+  const res=await fetch("/api/efast2",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({targets})});
+  if(!res.ok) throw new Error("Search failed");
+  return res.json();
 }
 
 function getModel(r){
@@ -1228,7 +1185,6 @@ export default function App(){
   },[]);
 
   const loadUserData=async(userId)=>{
-    _userId=userId;
     try{
       const [p,s]=await Promise.all([
         dbLoadPlans(userId).catch(e=>{console.error("plans load failed:",e);return [];}),
@@ -1243,20 +1199,20 @@ export default function App(){
     }
   };
 
-  const persistPlans=async u=>{setPlans(u);if(_userId)await dbSavePlans(u,_userId);};
+  const persistPlans=async u=>{setPlans(u);const uid=session?.user?.id;if(uid)await dbSavePlans(u,uid);};
   const handleAddPlans=async toAdd=>{
     const next=[...plans,...toAdd];
     await persistPlans(next);
     setNavTab("pipeline");
     setView("dashboard");
   };
-  const persistSettings=async s=>{setSettings(s);if(_userId)await dbSaveSettings(s,_userId);setSavedMsg(true);setTimeout(()=>setSavedMsg(false),2500);};
+  const persistSettings=async s=>{setSettings(s);const uid=session?.user?.id;if(uid)await dbSaveSettings(s,uid);setSavedMsg(true);setTimeout(()=>setSavedMsg(false),2500);};
   const handleSave=async p=>{
     const n=plans.find(x=>x.id===p.id)?plans.map(x=>x.id===p.id?p:x):[...plans,p];
-    setPlans(n);if(_userId)await dbSavePlan(p,_userId);setSelected(p);setView("detail");
+    setPlans(n);const uid=session?.user?.id;if(uid)await dbSavePlan(p,uid);setSelected(p);setView("detail");
   };
   const handleDelete=async()=>{
-    if(_userId&&live)await dbDeletePlan(live.id,_userId);
+    const uid=session?.user?.id;if(uid&&live)await dbDeletePlan(live.id,uid);
     const n=plans.filter(p=>p.id!==live?.id);setPlans(n);setSelected(null);setView("dashboard");
   };
   const handleUpdate=async p=>{const n=plans.map(x=>x.id===p.id?p:x);await persistPlans(n);setSelected(p);};
