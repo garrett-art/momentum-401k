@@ -126,40 +126,12 @@ const buildLinkedIn=p=>{const first=p.contactName?.split(" ")[0]||"there";return
 async function loadData(key,fb){try{const r=await window.storage.get(key);return r?JSON.parse(r.value):fb;}catch{return fb;}}
 async function saveData(key,val){try{await window.storage.set(key,JSON.stringify(val));}catch(e){console.error(e);}}
 
-async function analyzePlan(plan,s){
-  const avg=Number(plan.avgBalance)||(Number(plan.assets)&&Number(plan.participants)?Math.round(Number(plan.assets)/Number(plan.participants)):0);
-  const prompt=`You are generating 401(k) plan analysis for ${s.name} at ${s.firm} in Columbus, GA.
-
-Plan: ${plan.company} | Assets: $${Number(plan.assets).toLocaleString()} | Participants: ${Number(plan.participants).toLocaleString()} | Avg balance: $${avg.toLocaleString()} | Year: ${plan.planYear} | Provider: ${plan.provider||"unknown"}
-
-MODEL: fee_benchmark if participants<2000 AND avg>$15,000. admin_complexity if participants>2000 OR avg<$10,000.
-fee_benchmark: total cost ~1.28% (recordkeeping 0.35%, investments 0.62%, advisory 0.25%, other 0.06%). Median for $1M-$10M plans ~89 bps. Compute excess cost in dollars.
-admin_complexity: ERISA audit (100+ participants), admin burden from turnover, pricing model mismatch.
-
-CRITICAL VOICE: Plain language. No em-dashes. No jargon without explanation. Vary sentence length. Lead with employee impact. The prospect has already received a postcard saying "Your employees don't know what their 401(k) is actually costing them. Neither do most employers." — build on this premise. Include ERISA §404(a) personal (not corporate) fiduciary duty stated plainly, without alarm. Generate exactly 3 findings (or 2 if only 2 apply).
-
-Return ONLY valid JSON — no markdown:
-{
-  "planType":"fee_benchmark"|"admin_complexity",
-  "modelRationale":"one sentence",
-  "keyMetrics":{"estimatedTotalCostPct":0.00,"estimatedTotalCostDollar":0,"medianComparablePct":0.00,"excessCostDollar":0},
-  "prospectProfile":"2 sentences: who Matt is probably calling and their relationship to this plan",
-  "postcardBridge":"one sentence Matt uses to open — references the postcard naturally",
-  "anchorNumber":"single most compelling number for this plan",
-  "anchorContext":"one sentence in plain language explaining what that number means",
-  "findings":[{"anchor":"display value","anchorSub":"brief label","title":"active specific one-sentence headline","body":"2-3 sentences — employee impact first, plain language, no em-dashes"}],
-  "erisa404Line":"one sentence stating personal ERISA liability plainly — factual not alarmist",
-  "solutionText":"2-3 sentences — what a better version of this specific plan looks like, forward-looking",
-  "callArc":["step 1","step 2","step 3","step 4"],
-  "talkingPoints":["pt1","pt2","pt3","pt4","pt5"],
-  "questionsToAsk":["q1","q2","q3"],
-  "potentialObjections":[{"objection":"text","response":"how to handle"}]
-}`;
-  const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:MODEL,max_tokens:2000,messages:[{role:"user",content:prompt}]})});
+async function analyzePlan(plan,settings){
+  const res=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan,settings})});
   const data=await res.json();
-  return JSON.parse(data.content[0].text.replace(/```json|```/g,"").trim());
+  if(!res.ok)throw new Error(data.error||"Analysis failed");
+  return data;
 }
-
 async function processTranscript(transcript,plan){
   const res=await fetch("/api/transcript",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcript,plan})});
   if(!res.ok) throw new Error("Transcript processing failed");
@@ -861,29 +833,55 @@ function getModel(r){
   return r.participants<2000&&avg>15000?"fee_benchmark":"admin_complexity";
 }
 
-function ProspectTab({plans,onAddPlans}){
-  const [targets,setTargets]=useState(DEFAULT_TARGETS);
+function ProspectTab({plans,onAddPlans,targets,onTargetsChange,sizeFilter,onSizeFilterChange,results,onResultsChange}){
   const [addInput,setAddInput]=useState({type:"zip",value:"",state:""});
   const [showAddForm,setShowAddForm]=useState(false);
-  const [sizeFilter,setSizeFilter]=useState("all");
-  const [results,setResults]=useState(null);
   const [searching,setSearching]=useState(false);
   const [selected,setSelected]=useState(new Set());
+  const [sortBy,setSortBy]=useState("assets");
+  const [sortDir,setSortDir]=useState("desc");
+  const setTargets=onTargetsChange;
+  const setSizeFilter=onSizeFilterChange;
 
   const existingEINs=new Set(plans.map(p=>p.ein).filter(Boolean));
 
   const doSearch=async()=>{
-    setSearching(true);setResults(null);setSelected(new Set());
-    try{const data=await searchEFAST2(targets);setResults(data);}
+    setSearching(true);onResultsChange(null);setSelected(new Set());
+    try{const data=await searchEFAST2(targets);onResultsChange(data);}
     finally{setSearching(false);}
   };
 
-  const filtered=(results||[]).filter(r=>{
+  const sortedResults=[...(results||[])].sort((a,b)=>{
+    let av,bv;
+    if(sortBy==="company"){av=(a.company||"").toLowerCase();bv=(b.company||"").toLowerCase();}
+    else if(sortBy==="participants"){av=Number(a.participants||0);bv=Number(b.participants||0);}
+    else if(sortBy==="avgBalance"){av=Number(a.avgBalance||0);bv=Number(b.avgBalance||0);}
+    else{av=Number(a.assets||0);bv=Number(b.assets||0);}
+    if(av<bv)return sortDir==="asc"?-1:1;
+    if(av>bv)return sortDir==="asc"?1:-1;
+    return 0;
+  });
+
+  const filtered=sortedResults.filter(r=>{
     if(sizeFilter==="small") return r.assets>=1e6&&r.assets<5e6;
     if(sizeFilter==="mid")   return r.assets>=5e6&&r.assets<20e6;
     if(sizeFilter==="large") return r.assets>=20e6;
     return true;
   });
+
+  const onSort=field=>{
+    if(sortBy===field)setSortDir(d=>d==="asc"?"desc":"asc");
+    else{setSortBy(field);setSortDir("desc");}
+  };
+
+  const ProspectSortTh=({field,children})=>{
+    const active=sortBy===field;
+    return(
+      <th onClick={()=>onSort(field)} style={{padding:"10px 14px 10px 0",textAlign:"left",fontFamily:"'Syne',sans-serif",fontSize:9,fontWeight:700,color:active?BLUE:MUTED,textTransform:"uppercase",letterSpacing:"0.1em",cursor:"pointer",userSelect:"none",whiteSpace:"nowrap"}}>
+        {children}<span style={{display:"inline-block",width:10,marginLeft:2,opacity:active?1:0,fontSize:9}}>{sortDir==="asc"?"↑":"↓"}</span>
+      </th>
+    );
+  };
 
   const available=filtered.filter(r=>!existingEINs.has(r.ein));
   const allSelected=available.length>0&&selected.size===available.length;
@@ -1009,9 +1007,12 @@ function ProspectTab({plans,onAddPlans}){
                 <th style={{width:36,padding:"10px 14px",textAlign:"left"}}>
                   <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{cursor:"pointer"}}/>
                 </th>
-                {["Company","Location","Assets","Participants","Avg Balance","Type"].map(h=>(
-                  <th key={h} style={{padding:"10px 12px 10px 0",textAlign:"left",fontFamily:"'Syne',sans-serif",fontSize:9,fontWeight:700,color:MUTED,textTransform:"uppercase",letterSpacing:"0.1em"}}>{h}</th>
-                ))}
+                    <ProspectSortTh field="company">Company</ProspectSortTh>
+                  <th style={{padding:"10px 12px 10px 0",textAlign:"left",fontFamily:"'Syne',sans-serif",fontSize:9,fontWeight:700,color:MUTED,textTransform:"uppercase",letterSpacing:"0.1em"}}>Location</th>
+                  <ProspectSortTh field="assets">Assets</ProspectSortTh>
+                  <ProspectSortTh field="participants">Participants</ProspectSortTh>
+                  <ProspectSortTh field="avgBalance">Avg Balance</ProspectSortTh>
+                  <th style={{padding:"10px 12px 10px 0",textAlign:"left",fontFamily:"'Syne',sans-serif",fontSize:9,fontWeight:700,color:MUTED,textTransform:"uppercase",letterSpacing:"0.1em"}}>Type</th>
               </tr>
             </thead>
             <tbody>
@@ -1252,7 +1253,7 @@ export default function App(){
       <div style={{maxWidth:1100,margin:"0 auto",padding:"28px 24px"}}>
         {loading
           ?<div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"80px 0",color:MUTED,gap:8}}><Loader2 size={18} style={{animation:"spin 1s linear infinite"}}/>Loading...</div>
-          :navTab==="prospect"?<ProspectTab plans={plans} onAddPlans={handleAddPlans}/>
+          :navTab==="prospect"?<ProspectTab plans={plans} onAddPlans={handleAddPlans} targets={prospectTargets} onTargetsChange={setProspectTargets} sizeFilter={prospectSizeFilter} onSizeFilterChange={setProspectSizeFilter} results={prospectResults} onResultsChange={setProspectResults}/>
           :navTab==="settings"?<SettingsView settings={settings} onSave={persistSettings}/>
           :view==="dashboard"?<Dashboard plans={plans} onSelect={p=>{setSelected(p);setView("detail");}} onNew={()=>setView("new")}/>
           :view==="new"?<PlanForm onSave={handleSave} onCancel={()=>setView("dashboard")}/>
