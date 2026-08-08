@@ -438,7 +438,8 @@ function PlanDetail({plan,onBack,onUpdate,onEdit,settings}){
   const generate=async()=>{
     setGenerating(true);setGenErr(null);
     try{
-      const r=await analyzePlan(plan,settings);
+      const raw=await analyzePlan(plan,settings);
+      const r={planType:"fee_benchmark",modelRationale:"",keyMetrics:{estimatedTotalCostPct:0,estimatedTotalCostDollar:0,medianComparablePct:0,excessCostDollar:0},prospectProfile:"",postcardBridge:"",anchorNumber:"",anchorContext:"",erisa404Line:"",solutionText:"",callArc:[],talkingPoints:[],questionsToAsk:[],potentialObjections:[],findings:[],...raw};
       onUpdate({...plan,analysis:{...r,internalHtml:buildInternalHTML(plan,r,settings),clientHtml:buildClientHTML(plan,r,settings)}});
     }catch(e){setGenErr(e.message||"Generation failed. Check your connection and try again.");}
     finally{setGenerating(false);}
