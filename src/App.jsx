@@ -400,8 +400,14 @@ function Dashboard({plans,onSelect,onNew}){
 
       {/* Table */}
       {sorted.length===0?(
-        <div style={{textAlign:"center",padding:"48px 0",color:MUTED}}>
-          <p style={{fontSize:13}}>{filterTab==="active"?"No active plans. Add one or import from Prospect.":"No plans in this category yet."}</p>
+        <div style={{textAlign:"center",padding:"56px 0",color:MUTED,border:`1px solid ${RULE}`,borderRadius:4,background:"#fff"}}>
+          <BarChart3 size={28} color={RULE} style={{margin:"0 auto 12px"}}/>
+          <p style={{fontSize:14,fontWeight:500,color:BODY,marginBottom:6}}>
+            {filterTab==="active"?"No active plans yet.":filterTab==="won"?"No closed plans yet.":"No lost plans yet."}
+          </p>
+          <p style={{fontSize:12}}>
+            {filterTab==="active"?<span>Use <strong>Prospect</strong> to find plans or <strong>Add Plan</strong> to add one manually.</span>:"Plans move here when you update their status."}
+          </p>
         </div>
       ):(
         <div style={{background:"#fff",border:`1px solid ${RULE}`,borderRadius:4,overflow:"hidden"}}>
@@ -844,10 +850,53 @@ const MOCK_RESULTS=[
   {ein:"58-2345020",company:"W.C. Bradley Co. Affiliates",assets:22000000,participants:284,avgBalance:77465,planYear:2024,provider:"Fidelity",address:"1017 Front Ave",city:"Columbus",state:"GA",zip:"31901",adminName:"W.C. Bradley Co. Affiliates",adminPhone:"(706) 571-6000"},
 ];
 
+function parseEFAST2Hit(hit){
+  const s=hit._source||hit||{};
+  const assets=parseFloat(s.net_assets||s.tot_assets_eoy_amt||s.total_assets||0);
+  const participants=parseInt(s.tot_partcp_eoy_cnt||s.tot_active_partcp_cnt||0,10);
+  const avgBalance=participants>0?Math.round(assets/participants):0;
+  return {
+    ein:s.sponsor_ein||s.spons_ein||'',
+    company:s.sponsor_dfe_name||s.plan_name||s.spons_dfe_name||'',
+    assets,participants,avgBalance,
+    planYear:(s.plan_year_begin_date||s.py_start_date||'').slice(0,4),
+    provider:'',
+    address:s.spons_us_address1||s.spons_us_addr1||'',
+    city:s.spons_us_city||'',
+    state:s.spons_us_state||'',
+    zip:(s.spons_us_zip||s.spons_zip||'').toString().slice(0,5),
+    adminName:s.plan_admin_name||s.sponsor_dfe_name||'',
+    adminPhone:s.spons_phone_num||'',
+  };
+}
+
 async function searchEFAST2(targets){
-  const res=await fetch("/api/efast2",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({targets})});
-  if(!res.ok) throw new Error("EFAST2 search failed");
-  return res.json();
+  // Call DOL EFAST2 directly from the browser — works because DOL allows browser requests
+  // Server-side calls from cloud providers are blocked by DOL, so we skip the proxy
+  const allHits=[];
+  const seenEINs=new Set();
+  for(const target of targets){
+    try{
+      const q=target.type==="zip"
+        ?`spons_us_zip:${target.value}`
+        :`spons_us_city:"${target.value}" AND spons_us_state:${target.state}`;
+      const params=new URLSearchParams({
+        q,sort_by:"net_assets",sort_order:"desc",size:"25",
+        dateRange:"custom",startDate:"2022-01-01",endDate:"2024-12-31"
+      });
+      const res=await fetch(`https://efts.dol.gov/EFTS/hits?${params}`);
+      if(!res.ok) continue;
+      const data=await res.json();
+      const hits=data.hits?.hits||[];
+      for(const hit of hits){
+        const plan=parseEFAST2Hit(hit);
+        if(plan.ein&&!seenEINs.has(plan.ein)&&plan.assets>0&&plan.company){
+          seenEINs.add(plan.ein);allHits.push(plan);
+        }
+      }
+    }catch(e){console.error(`EFAST2 target ${JSON.stringify(target)} failed:`,e);}
+  }
+  return allHits.sort((a,b)=>b.assets-a.assets);
 }
 
 function getModel(r){
@@ -1156,7 +1205,7 @@ function LoginScreen(){
 export default function App(){
   const [session,setSession]=useState(null);
   const [authLoading,setAuthLoading]=useState(true);
-  const [plans,setPlans]=useState([DUMMY_PLAN]);
+  const [plans,setPlans]=useState([]);
   const [settings,setSettings]=useState(DEFAULT_SETTINGS);
   const [loading,setLoading]=useState(false);
   const [view,setView]=useState("dashboard");
@@ -1185,7 +1234,7 @@ export default function App(){
         dbLoadPlans(userId).catch(e=>{console.error("plans load failed:",e);return [];}),
         dbLoadSettings(userId).catch(e=>{console.error("settings load failed:",e);return null;})
       ]);
-      setPlans(p&&p.length>0?p:[DUMMY_PLAN]);
+      setPlans(p||[]);
       setSettings(s||DEFAULT_SETTINGS);
     }catch(e){
       console.error("loadUserData error:",e);
