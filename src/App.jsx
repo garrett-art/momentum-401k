@@ -166,7 +166,6 @@ const INTERNAL_DOC_CSS=`<link href="https://fonts.googleapis.com/css2?family=IBM
 
 function buildClientHTML(plan,a,s){
   const avg=Number(plan.avgBalance)||Math.round(Number(plan.assets)/Number(plan.participants));
-  const isFee=a.planType==="fee_benchmark";
   const excess=a.keyMetrics?.excessCostDollar||0;
   const assets=Number(plan.assets)||0;
   const parts=Number(plan.participants)||1;
@@ -175,9 +174,7 @@ function buildClientHTML(plan,a,s){
   const ph=s.phone||"[PHONE]";
   const em=s.email||"[EMAIL]";
   const css=CLIENT_DOC_CSS;
-
-  if(isFee){
-    const rk=fmtF(Math.round(assets*0.0035));
+  const rk=fmtF(Math.round(assets*0.0035));
     const inv=fmtF(Math.round(assets*0.0062));
     const adv=fmtF(Math.round(assets*0.0025));
     const oth=fmtF(Math.round(assets*0.0006));
@@ -215,45 +212,8 @@ function buildClientHTML(plan,a,s){
 <div style="padding-top:10px"><div class="footer"><sup>*</sup> Cost figures are illustrative, based on typical bundled plan cost structures for plans of this size; to be confirmed against the plan's 408(b)(2) service provider fee disclosure before any recommendation is made.&nbsp;&nbsp;<sup>§</sup> Median all-in cost from the 401k Averages Book, 26th Edition; $5M–$10M assets, 50–100 participants; individual plan costs vary.&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document does not constitute investment advice · Form ADV Part 2A at adviserinfo.sec.gov</div></div></div>
 </div>
 </body></html>`;
-  } else {
-    // Admin complexity
-    const findings=(a.findings&&a.findings.length>0)?a.findings:[
-      {title:"This plan was built for a different kind of workforce",body:"Most bundled recordkeepers price primarily on assets. For a plan with "+plan.participants+" participants, the infrastructure may not fit your workforce."},
-      {title:"ERISA requires an annual independent audit at your plan's size",body:"Plans with 100 or more eligible participants must include an independent auditor's opinion with their Form 5500 every year."},
-      {title:"High turnover creates admin work most providers don't absorb",body:"A cycling workforce means a constant stream of former employees leaving small balances behind — each requiring DOL-mandated notices, searches, and processing."}
-    ];
-    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Plan Review — ${plan.company}</title>${css}</head><body>
-<div style="display:flex;flex-direction:column;min-height:6.5in">
-<div class="top-rule"></div>
-<span class="doc-type">401(k) Plan Administrative Review · Prepared for Plan Fiduciary</span>
-<div class="co">${plan.company}</div>
-<div class="co-meta">${plan.participants} Participants&nbsp;&nbsp;·&nbsp;&nbsp;${fmtF(assets)} in Assets&nbsp;&nbsp;·&nbsp;&nbsp;${fmtF(avg)} Avg. Balance&nbsp;&nbsp;·&nbsp;&nbsp;Form 5500&nbsp;&nbsp;·&nbsp;&nbsp;Plan Year ${plan.planYear}</div>
-<div class="cols">
-<div class="col-l">
-<div class="sh">Your plan at a glance</div><div class="sh-rule"></div>
-<div class="stat-row">
-<div class="stat-cell"><span class="stat-lbl">Avg. Balance per Participant</span><span class="stat-val">${fmtF(avg)}</span><span class="stat-note">Relative to plans this asset size<sup>*</sup></span></div>
-<div class="stat-cell"><span class="stat-lbl">Active Participants</span><span class="stat-val">${Number(plan.participants).toLocaleString()}</span><span class="stat-note">ERISA large-plan filing if 100+</span></div>
-<div class="stat-cell"><span class="stat-lbl">Plan Assets</span><span class="stat-val">${fmtF(assets)}</span><span class="stat-note">Form 5500, ${plan.planYear}</span></div>
-<div class="stat-cell"><span class="stat-lbl">Participants per $1M</span><span class="stat-val">${assets>0?Math.round(parts/(assets/1e6)).toLocaleString():"—"}</span><span class="stat-note">Signals structural fit</span></div>
-</div>
-<div class="sh">What we found</div><div class="sh-rule"></div>
-${findings.slice(0,3).map((f,i)=>`<div class="fi"><span class="fi-num">0${i+1}</span><div class="fi-body"><div class="fi-title">${f.title}</div><p class="fi-text">${f.body||""}</p></div></div>`).join("")}
-</div>
-<div class="col-r">
-<div class="callout"><span class="callout-lbl">The number that tells the story</span><span class="callout-num">${fmtF(avg)}</span><p class="callout-sub">Average employee savings. On a well-matched plan with auto-enrollment and better structure, that number is significantly higher — without the company contributing a dollar more.</p></div>
-<div class="sh" style="margin-top:4px">What a better plan looks like</div><div class="sh-rule"></div>
-${["Payroll integration that enrolls new hires automatically — no manual processing at every hire and termination","ERISA §3(16) fiduciary support that absorbs notices, searches, and small-balance processing","Pricing built for a headcount-heavy plan — not one that penalizes you for having more employees than assets","Auto-enrollment that closes the participation gap from day one"].map(t=>`<div class="better-item"><div class="better-dot"></div><p class="better-text">${t}</p></div>`).join("")}
-<div class="erisa" style="margin-top:14px"><span class="erisa-lbl">A note on your fiduciary responsibility</span><p class="erisa-text">Under ERISA, the obligation to run this plan prudently is yours personally — not the company's. A documented review of whether the plan still fits your workforce is exactly what prudent oversight looks like. This document is that review. Keep it in your plan file.</p></div>
-</div></div>
-<div style="margin-top:auto"><div class="bottom"><p class="cta">I'd like to walk you through this in about 20 minutes — no presentation, no pressure. Just a straight conversation about whether there's something worth pursuing here.</p>
-<div class="sig"><span class="sig-name">${nm}</span><span class="sig-line">Momentum Wealth Management&nbsp;&nbsp;·&nbsp;&nbsp;Columbus, GA</span><span class="sig-line">${ph}&nbsp;&nbsp;·&nbsp;&nbsp;${em}</span></div></div>
-<div style="padding-top:10px"><div class="footer"><sup>*</sup> ICI/ISS MI Defined Contribution Plan Profile (2023), presented as general industry context only; not a benchmark of this specific plan's costs.&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document does not constitute investment advice · Form ADV Part 2A at adviserinfo.sec.gov</div>
-</div></div></div>
-</div>
-</body></html>`;
-  }
 }
+
 
 function buildInternalHTML(plan,a,s){
   const avg=Number(plan.avgBalance)||Math.round(Number(plan.assets)/Number(plan.participants));
@@ -301,7 +261,7 @@ function buildInternalHTML(plan,a,s){
 <div class="opening" style="margin-bottom:18px"><p class="opening-text">"${bridge}"</p></div>
 <div class="sh">The call</div><div class="sh-rule"></div>
 <div class="seq">${callArc.map((step,i)=>`<div class="step"><span class="step-n">${i+1}</span><div class="step-body"><div class="step-t">Step ${i+1}</div><div class="step-sub">${step}</div></div></div>`).join("")}</div>
-${costCtx}
+${a.diagnosticNote?`<div style="margin-top:10px;padding:8px 12px;background:#f8fafc;border-left:3px solid ${BLUE};font-size:8.5pt;color:${BODY};line-height:1.55;font-weight:300;font-style:italic">${a.diagnosticNote}</div>`:""}
 </div>
 
 <div style="display:flex;flex-direction:column;min-height:9.4in">
@@ -629,7 +589,7 @@ function PlanDetail({plan,onBack,onUpdate,onEdit,settings}){
     setGenerating(true);setGenErr(null);
     try{
       const raw=await analyzePlan(plan,settings);
-      const r={planType:"fee_benchmark",modelRationale:"",keyMetrics:{estimatedTotalCostPct:0,estimatedTotalCostDollar:0,medianComparablePct:0,excessCostDollar:0},prospectProfile:"",postcardBridge:"",anchorNumber:"",anchorContext:"",erisa404Line:"",solutionText:"",callArc:[],talkingPoints:[],questionsToAsk:[],potentialObjections:[],findings:[],...raw};
+      const r={planType:"fee_benchmark",keyMetrics:{estimatedTotalCostPct:0,estimatedTotalCostDollar:0,medianComparablePct:0,excessCostDollar:0},prospectProfile:"",postcardBridge:"",anchorNumber:"",anchorContext:"",erisa404Line:"",solutionText:"",callArc:[],talkingPoints:[],questionsToAsk:[],potentialObjections:[],findings:[],...raw};
       onUpdate({...plan,analysis:{...r,internalHtml:buildInternalHTML(plan,r,settings),clientHtml:buildClientHTML(plan,r,settings)}});
     }catch(e){setGenErr(e.message||"Generation failed. Check your connection and try again.");}
     finally{setGenerating(false);}
