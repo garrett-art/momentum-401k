@@ -1187,7 +1187,7 @@ function ProspectTab({plans,onAddPlans,targets,onTargetsChange,sizeFilter,onSize
                     onMouseLeave={e=>{if(!tracking&&!checked)e.currentTarget.style.background=checked?"#f0f8ff":"#fff";}}>
                     <td style={{padding:"11px 14px"}}>
                       {tracking
-                        ?<Check size={14} color={GREEN}/>
+                        ?<div style={{display:"flex",alignItems:"center",height:"100%"}}><Check size={14} color={GREEN}/></div>
                         :<input type="checkbox" checked={checked} onChange={()=>toggleSelect(r.ein)} onClick={e=>e.stopPropagation()} style={{cursor:"pointer"}}/>
                       }
                     </td>
