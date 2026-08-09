@@ -184,6 +184,7 @@ function buildClientHTML(plan,a,s){
     const tot=fmtF(Math.round(assets*0.0128));
     const med=fmtF(Math.round(assets*0.0089));
     return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Fee Benchmark — ${plan.company}</title>${css}</head><body>
+<div style="display:flex;flex-direction:column;min-height:6.5in">
 <div class="top-rule"></div>
 <span class="doc-type">401(k) Fee Benchmark · Prepared for Plan Fiduciary</span>
 <div class="co">${plan.company}</div>
@@ -213,7 +214,8 @@ function buildClientHTML(plan,a,s){
 </div></div>
 <div class="bottom"><p class="cta">I'd like to walk you through this in about 20 minutes — no presentation, no pressure. Just a straight conversation about whether there's something worth pursuing here.</p>
 <div class="sig"><span class="sig-name">${nm}</span><span class="sig-line">Momentum Wealth Management&nbsp;&nbsp;·&nbsp;&nbsp;Columbus, GA</span><span class="sig-line">${ph}&nbsp;&nbsp;·&nbsp;&nbsp;${em}</span></div></div>
-<div class="footer"><sup>*</sup> Cost figures are illustrative, based on typical bundled plan cost structures for plans of this size; to be confirmed against the plan's 408(b)(2) service provider fee disclosure before any recommendation is made.&nbsp;&nbsp;<sup>§</sup> Median all-in cost from the 401k Averages Book, 26th Edition; $5M–$10M assets, 50–100 participants; individual plan costs vary.&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document does not constitute investment advice · Form ADV Part 2A at adviserinfo.sec.gov</div>
+<div style="margin-top:auto"><div class="footer"><sup>*</sup> Cost figures are illustrative, based on typical bundled plan cost structures for plans of this size; to be confirmed against the plan's 408(b)(2) service provider fee disclosure before any recommendation is made.&nbsp;&nbsp;<sup>§</sup> Median all-in cost from the 401k Averages Book, 26th Edition; $5M–$10M assets, 50–100 participants; individual plan costs vary.&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document does not constitute investment advice · Form ADV Part 2A at adviserinfo.sec.gov</div></div>
+</div>
 </body></html>`;
   } else {
     // Admin complexity
@@ -223,6 +225,7 @@ function buildClientHTML(plan,a,s){
       {title:"High turnover creates admin work most providers don't absorb",body:"A cycling workforce means a constant stream of former employees leaving small balances behind — each requiring DOL-mandated notices, searches, and processing."}
     ];
     return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Plan Review — ${plan.company}</title>${css}</head><body>
+<div style="display:flex;flex-direction:column;min-height:6.5in">
 <div class="top-rule"></div>
 <span class="doc-type">401(k) Plan Administrative Review · Prepared for Plan Fiduciary</span>
 <div class="co">${plan.company}</div>
@@ -247,7 +250,9 @@ ${["Payroll integration that enrolls new hires automatically — no manual proce
 </div></div>
 <div class="bottom"><p class="cta">I'd like to walk you through this in about 20 minutes — no presentation, no pressure. Just a straight conversation about whether there's something worth pursuing here.</p>
 <div class="sig"><span class="sig-name">${nm}</span><span class="sig-line">Momentum Wealth Management&nbsp;&nbsp;·&nbsp;&nbsp;Columbus, GA</span><span class="sig-line">${ph}&nbsp;&nbsp;·&nbsp;&nbsp;${em}</span></div></div>
-<div class="footer"><sup>*</sup> ICI/ISS MI Defined Contribution Plan Profile (2023), presented as general industry context only; not a benchmark of this specific plan's costs.&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document does not constitute investment advice · Form ADV Part 2A at adviserinfo.sec.gov</div>
+<div style="margin-top:auto"><div class="footer"><sup>*</sup> ICI/ISS MI Defined Contribution Plan Profile (2023), presented as general industry context only; not a benchmark of this specific plan's costs.&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document does not constitute investment advice · Form ADV Part 2A at adviserinfo.sec.gov</div>
+</div></div>
+</div>
 </body></html>`;
   }
 }
