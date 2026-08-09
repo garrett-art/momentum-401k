@@ -1186,10 +1186,12 @@ function ProspectTab({plans,onAddPlans,targets,onTargetsChange,sizeFilter,onSize
                     onMouseEnter={e=>{if(!tracking&&!checked)e.currentTarget.style.background=FILL;}}
                     onMouseLeave={e=>{if(!tracking&&!checked)e.currentTarget.style.background=checked?"#f0f8ff":"#fff";}}>
                     <td style={{padding:"11px 14px",verticalAlign:"middle"}}>
-                      {tracking
-                        ?<Check size={14} color={GREEN} style={{display:"block"}}/>
-                        :<input type="checkbox" checked={checked} onChange={()=>toggleSelect(r.ein)} onClick={e=>e.stopPropagation()} style={{cursor:"pointer"}}/>
-                      }
+                      <div style={{width:16,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                        {tracking
+                          ?<Check size={13} color={GREEN}/>
+                          :<input type="checkbox" checked={checked} onChange={()=>toggleSelect(r.ein)} onClick={e=>e.stopPropagation()} style={{cursor:"pointer",width:13,height:13,margin:0}}/>
+                        }
+                      </div>
                     </td>
                     <td style={{padding:"11px 12px 11px 0"}}>
                       <div style={{fontWeight:500,color:INK,fontSize:13}}>{r.company}</div>
