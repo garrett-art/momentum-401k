@@ -1376,6 +1376,30 @@ export default function App(){
   const [prospectSizeFilter,setProspectSizeFilter]=useState("all");
   const [prospectResults,setProspectResults]=useState(null);
 
+  // Load prospect state from sessionStorage on app mount
+  useEffect(()=>{
+    try{
+      const saved=sessionStorage.getItem("reach_prospect");
+      if(saved){
+        const {targets,sizeFilter,results}=JSON.parse(saved);
+        if(targets&&targets.length>0)setProspectTargets(targets);
+        if(sizeFilter)setProspectSizeFilter(sizeFilter);
+        if(results)setProspectResults(results);
+      }
+    }catch(e){}
+  },[]);
+
+  // Persist prospect state to sessionStorage whenever it changes
+  useEffect(()=>{
+    try{
+      sessionStorage.setItem("reach_prospect",JSON.stringify({
+        targets:prospectTargets,
+        sizeFilter:prospectSizeFilter,
+        results:prospectResults
+      }));
+    }catch(e){}
+  },[prospectTargets,prospectSizeFilter,prospectResults]);
+
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
       setSession(session);
@@ -1387,7 +1411,7 @@ export default function App(){
       setSession(session);
       userIdRef.current=session?.user?.id||null;
       if(session){loadUserData(session.user.id);}
-      else{setPlans([]);setSettings(DEFAULT_SETTINGS);}
+      else{setPlans([]);setSettings(DEFAULT_SETTINGS);try{sessionStorage.removeItem("reach_prospect");}catch(e){}}
     });
     return()=>subscription.unsubscribe();
   },[]);
