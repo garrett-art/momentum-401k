@@ -261,7 +261,7 @@ function buildInternalHTML(plan,a,s){
 <div class="opening" style="margin-bottom:18px"><p class="opening-text">"${bridge}"</p></div>
 <div class="sh">The call</div><div class="sh-rule"></div>
 <ul class="ql">${callArc.map(step=>`<li>${step}</li>`).join("")}</ul>
-${a.diagnosticNote?`<div style="margin-top:10px;padding:8px 12px;background:#f8fafc;border-left:3px solid ${BLUE};font-size:8.5pt;color:${BODY};line-height:1.55;font-weight:300;font-style:italic">${a.diagnosticNote}</div>`:""}
+${a.diagnosticNote?`<div style="margin-top:20px;padding:8px 12px;background:#f8fafc;border-left:3px solid ${BLUE};font-size:8.5pt;color:${BODY};line-height:1.55;font-weight:300;font-style:italic">${a.diagnosticNote}</div>`:""}
 </div>
 
 <div style="display:flex;flex-direction:column;min-height:9.4in">
