@@ -202,7 +202,7 @@ function buildClientHTML(plan,a,s){
 </div></div>
 <div class="bottom"><p class="cta">I'd like to walk you through this in about 20 minutes — no presentation, no pressure. Just a straight conversation about whether there's something worth pursuing here.</p>
 <div class="sig"><span class="sig-name">${nm}</span><span class="sig-line">Momentum Wealth Management&nbsp;&nbsp;·&nbsp;&nbsp;Columbus, GA</span><span class="sig-line">${ph}&nbsp;&nbsp;·&nbsp;&nbsp;${em}</span></div></div>
-<div class="footer">Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document is for informational purposes only and does not constitute investment advice · Form ADV Part 2A at adviserinfo.sec.gov</div>
+<div class="footer"><sup>*</sup> Cost figures are illustrative, based on typical bundled plan cost structures for plans of this size; to be confirmed against the plan's 408(b)(2) service provider fee disclosure before any recommendation is made.&nbsp;&nbsp;<sup>§</sup> Median all-in cost from the 401k Averages Book, 26th Edition; $5M–$10M assets, 50–100 participants; individual plan costs vary.&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document does not constitute investment advice · Form ADV Part 2A at adviserinfo.sec.gov</div>
 </body></html>`;
   } else {
     // Admin complexity
@@ -220,7 +220,7 @@ function buildClientHTML(plan,a,s){
 <div class="col-l">
 <div class="sh">Your plan at a glance</div><div class="sh-rule"></div>
 <div class="stat-row">
-<div class="stat-cell"><span class="stat-lbl">Avg. Balance per Participant</span><span class="stat-val">${fmtF(avg)}</span><span class="stat-note">Relative to plans this asset size<sup>1</sup></span></div>
+<div class="stat-cell"><span class="stat-lbl">Avg. Balance per Participant</span><span class="stat-val">${fmtF(avg)}</span><span class="stat-note">Relative to plans this asset size<sup>*</sup></span></div>
 <div class="stat-cell"><span class="stat-lbl">Active Participants</span><span class="stat-val">${Number(plan.participants).toLocaleString()}</span><span class="stat-note">ERISA large-plan filing if 100+</span></div>
 <div class="stat-cell"><span class="stat-lbl">Plan Assets</span><span class="stat-val">${fmtF(assets)}</span><span class="stat-note">Form 5500, ${plan.planYear}</span></div>
 <div class="stat-cell"><span class="stat-lbl">Participants per $1M</span><span class="stat-val">${assets>0?Math.round(parts/(assets/1e6)).toLocaleString():"—"}</span><span class="stat-note">Signals structural fit</span></div>
@@ -236,7 +236,7 @@ ${["Payroll integration that enrolls new hires automatically — no manual proce
 </div></div>
 <div class="bottom"><p class="cta">I'd like to walk you through this in about 20 minutes — no presentation, no pressure. Just a straight conversation about whether there's something worth pursuing here.</p>
 <div class="sig"><span class="sig-name">${nm}</span><span class="sig-line">Momentum Wealth Management&nbsp;&nbsp;·&nbsp;&nbsp;Columbus, GA</span><span class="sig-line">${ph}&nbsp;&nbsp;·&nbsp;&nbsp;${em}</span></div></div>
-<div class="footer"><sup>1</sup> ICI/ISS MI Defined Contribution Plan Profile (2023), presented as general context only.&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document is for informational purposes only · Form ADV Part 2A at adviserinfo.sec.gov</div>
+<div class="footer"><sup>*</sup> ICI/ISS MI Defined Contribution Plan Profile (2023), presented as general industry context only; not a benchmark of this specific plan's costs.&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable · This document does not constitute investment advice · Form ADV Part 2A at adviserinfo.sec.gov</div>
 </body></html>`;
   }
 }
@@ -290,6 +290,7 @@ function buildInternalHTML(plan,a,s){
 ${costCtx}
 </div>
 
+<div style="display:flex;flex-direction:column;min-height:9.4in">
 <div class="top-rule"></div>
 <div class="p2co">${plan.company}</div>
 <div class="p2meta">If the call goes long</div>
@@ -304,7 +305,9 @@ ${costCtx}
 <div class="col-h"><div class="sh">Questions</div><div class="sh-rule"></div><ul class="ql">${questions.map(q=>`<li>${q}</li>`).join("")}</ul></div>
 <div class="col-h"><div class="sh">Objections</div><div class="sh-rule"></div>${objections.map(o=>`<div class="obj-block"><div class="obj-q">"${o.objection}"</div><div class="obj-a">${o.response}</div></div>`).join("")}</div>
 </div>
+<div style="margin-top:auto;padding-top:16px">
 <div class="footer">Momentum Wealth Management&nbsp;&nbsp;·&nbsp;&nbsp;Internal Use Only&nbsp;&nbsp;·&nbsp;&nbsp;Not for distribution&nbsp;&nbsp;·&nbsp;&nbsp;Investment advisory services offered through Momentum Wealth Management LLC, an investment adviser principally registered in the State of Georgia and registered or exempt from registration in other states as applicable</div>
+</div></div>
 </body></html>`;
 }
 
@@ -1345,7 +1348,7 @@ export default function App(){
   const [navTab,setNavTab]=useState("pipeline");
   const [selected,setSelected]=useState(null);
   const [savedMsg,setSavedMsg]=useState(false);
-  const [prospectTargets,setProspectTargets]=useState(DEFAULT_TARGETS);
+  const [prospectTargets,setProspectTargets]=useState([]);
   const [prospectSizeFilter,setProspectSizeFilter]=useState("all");
   const [prospectResults,setProspectResults]=useState(null);
 
