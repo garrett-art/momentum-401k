@@ -153,7 +153,7 @@ async function importSF(filePath) {
       city:        row['SF_SPONS_US_CITY'] || '',
       state,
       zip,
-      admin_name:  row['SF_ADMIN_NAME'] || company,
+      admin_name:  row['SF_ADMIN_SIGNED_NAME'] || row['SF_SPONS_SIGNED_NAME'] || row['SF_ADMIN_NAME'] || company,
       admin_phone: row['SF_ADMIN_PHONE_NUM'] || row['SF_SPONS_PHONE_NUM'] || '',
     });
 
@@ -211,7 +211,7 @@ async function importMain(filePath) {
       city:        row['SPONS_DFE_MAIL_US_CITY'] || '',
       state,
       zip,
-      admin_name:  row['ADMIN_NAME'] || company,
+      admin_name:  row['ADMIN_SIGNED_NAME'] || row['SPONS_SIGNED_NAME'] || row['ADMIN_NAME'] || company,
       admin_phone: row['ADMIN_PHONE_NUM'] || row['SPONS_DFE_PHONE_NUM'] || '',
     });
 

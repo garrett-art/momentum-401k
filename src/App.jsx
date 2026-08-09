@@ -1187,7 +1187,7 @@ function ProspectTab({plans,onAddPlans,targets,onTargetsChange,sizeFilter,onSize
                     onMouseLeave={e=>{if(!tracking&&!checked)e.currentTarget.style.background=checked?"#f0f8ff":"#fff";}}>
                     <td style={{padding:"11px 14px"}}>
                       {tracking
-                        ?<span style={{fontFamily:"'Syne',sans-serif",fontSize:8,fontWeight:700,color:MUTED,textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>In pipeline</span>
+                        ?<Check size={14} color={GREEN}/>
                         :<input type="checkbox" checked={checked} onChange={()=>toggleSelect(r.ein)} onClick={e=>e.stopPropagation()} style={{cursor:"pointer"}}/>
                       }
                     </td>
