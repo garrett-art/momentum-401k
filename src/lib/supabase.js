@@ -5,13 +5,12 @@ export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
-// ── Plans ──────────────────────────────────────────────────────────────────────
+// ── Plans (shared across all authenticated users) ──────────────────────────────
 
-export async function dbLoadPlans(userId) {
+export async function dbLoadPlans() {
   const { data, error } = await supabase
     .from('plans')
     .select('data')
-    .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data || []).map(row => row.data);
@@ -25,21 +24,25 @@ export async function dbSavePlan(plan, userId) {
 }
 
 export async function dbSavePlans(plans, userId) {
-  const rows = plans.map(p => ({ id: p.id, user_id: userId, data: p, updated_at: new Date().toISOString() }));
+  const rows = plans.map(p => ({
+    id: p.id,
+    user_id: userId,
+    data: p,
+    updated_at: new Date().toISOString()
+  }));
   const { error } = await supabase.from('plans').upsert(rows);
   if (error) throw error;
 }
 
-export async function dbDeletePlan(planId, userId) {
+export async function dbDeletePlan(planId) {
   const { error } = await supabase
     .from('plans')
     .delete()
-    .eq('id', planId)
-    .eq('user_id', userId);
+    .eq('id', planId);
   if (error) throw error;
 }
 
-// ── Settings ───────────────────────────────────────────────────────────────────
+// ── Settings (personal — each user keeps their own) ────────────────────────────
 
 export async function dbLoadSettings(userId) {
   const { data, error } = await supabase
@@ -47,7 +50,7 @@ export async function dbLoadSettings(userId) {
     .select('data')
     .eq('user_id', userId)
     .single();
-  if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+  if (error && error.code !== 'PGRST116') throw error;
   return data?.data || null;
 }
 
