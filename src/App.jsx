@@ -1471,11 +1471,11 @@ export default function App(){
 }function buildLinkedIn(plan){
   const first=plan.contactName?plan.contactName.split(" ")[0]:"there";
   const variants=[
-    `Hi ${first} — I work with employers in the Columbus area on their company retirement plans and thought it was worth connecting. No pitch, just building relationships locally.`,
-    `Hi ${first}, I'm a 401(k) advisor based in Columbus and I've been connecting with benefits and HR professionals in the area. Would be glad to have you in my network.`,
-    `Hi ${first} — I consult on company retirement plans here in the Chattahoochee Valley and came across your name. Always glad to connect with people thinking about employee benefits.`,
-    `Hi ${first}, I work with business owners and HR teams in Columbus on 401(k) plan design and costs. Thought a connection might be worthwhile — no agenda, just networking.`,
-    `Hi ${first} — retirement plan consulting is my focus in the Columbus market. I try to stay connected with folks on the employer side of things. Hope to connect!`,
+    `Hi ${first} — I sent something over to your office recently about your company's 401(k). Thought it made sense to follow up with a connection here as well. Hope to connect!`,
+    `Hi ${first}, you may have received a note from me recently about your retirement plan. Reaching out to connect while I had your name in front of me.`,
+    `Hi ${first} — I dropped some information to your office a little while back about your 401(k). Connecting here as a follow-up — looking forward to it.`,
+    `Hi ${first}, I recently sent something to your office regarding your company's retirement plan. Would love to be connected here as well.`,
+    `Hi ${first} — I reached out to your office recently about your 401(k) plan. Thought I'd follow up with a connection request while I had the chance.`,
   ];
   const idx=plan.liVariant!==undefined?plan.liVariant:Math.floor(Math.random()*variants.length);
   return variants[Math.min(idx,variants.length-1)];
