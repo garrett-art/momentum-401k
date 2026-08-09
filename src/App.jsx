@@ -1371,6 +1371,7 @@ export default function App(){
   const [navTab,setNavTab]=useState("pipeline");
   const [selected,setSelected]=useState(null);
   const [savedMsg,setSavedMsg]=useState(false);
+  const [saveError,setSaveError]=useState(null);
   const [prospectTargets,setProspectTargets]=useState([]);
   const [prospectSizeFilter,setProspectSizeFilter]=useState("all");
   const [prospectResults,setProspectResults]=useState(null);
@@ -1409,7 +1410,13 @@ export default function App(){
     }
   };
 
-  const persistPlans=async u=>{setPlans(u);const uid=userIdRef.current;if(uid){try{await dbSavePlans(u,uid);}catch(e){console.error("Save plans error:",e);}}};
+  const persistPlans=async u=>{
+    setPlans(u);
+    const uid=userIdRef.current;
+    if(!uid){setSaveError("Not signed in — plans saved locally only");return;}
+    try{await dbSavePlans(u,uid);setSaveError(null);}
+    catch(e){console.error("Save plans error:",e);setSaveError("Save failed: "+e.message);}
+  };
   const handleAddPlans=async toAdd=>{
     const next=[...plans,...toAdd];
     await persistPlans(next);
@@ -1425,7 +1432,10 @@ export default function App(){
   };
   const handleSave=async p=>{
     const n=plans.find(x=>x.id===p.id)?plans.map(x=>x.id===p.id?p:x):[...plans,p];
-    setPlans(n);const uid=userIdRef.current;if(uid){try{await dbSavePlan(p,uid);}catch(e){console.error("Save plan error:",e);}}setSelected(p);setView("detail");
+    setPlans(n);
+    const uid=userIdRef.current;
+    if(uid){try{await dbSavePlan(p,uid);setSaveError(null);}catch(e){console.error("Save plan error:",e);setSaveError("Save failed: "+e.message);}}
+    setSelected(p);setView("detail");
   };
   const handleDelete=async()=>{
     try{await dbDeletePlan(live.id);}catch(e){console.error("Delete error:",e);}
@@ -1463,6 +1473,7 @@ export default function App(){
           <Tab id="settings" label="Settings"  icon={<Settings size={13}/>}/>
         </div>
         {savedMsg&&<div style={{display:"flex",alignItems:"center",gap:5,color:"#4ade80",fontSize:12,marginLeft:16}}><Check size={13}/>Settings saved</div>}
+        {saveError&&<div style={{fontSize:11,color:"#fca5a5",marginLeft:16,maxWidth:300,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={saveError}>⚠ {saveError}</div>}
         </div>
       </div>
       <div style={{maxWidth:1100,margin:"0 auto",padding:"28px 24px"}}>
