@@ -9,11 +9,12 @@ const MODEL = "claude-sonnet-4-6";
 const BLUE="#29aae2",INK="#293132",BODY="#3d4f60",MUTED="#8a9bb0",RULE="#e2e8ed",FILL="#f5f7f9",GREEN="#16a34a",AMBER="#d97706",RED="#c0392b";
 
 const STATUSES={
-  new:          {label:"New",              bg:"#f0f9ff",color:BLUE},
-  in_progress:  {label:"In Progress",      bg:"#f0fdf4",color:GREEN},
-  closed:       {label:"Closed",           bg:"#dcfce7",color:"#15803d"},
-  lost:         {label:"Lost",             bg:"#fef2f2",color:RED},
-  no_response:  {label:"Never Heard Back", bg:"#f9fafb",color:"#9ca3af"},
+  new:            {label:"New",              bg:"#f0f9ff",color:BLUE},
+  in_progress:    {label:"In Progress",      bg:"#f0fdf4",color:GREEN},
+  ready_for_call: {label:"Ready for Call",   bg:"#fef3c7",color:"#d97706"},
+  closed:         {label:"Closed",           bg:"#dcfce7",color:"#15803d"},
+  lost:           {label:"Lost",             bg:"#fef2f2",color:RED},
+  no_response:    {label:"Never Heard Back", bg:"#f9fafb",color:"#9ca3af"},
 };
 // Statuses available for manual selection (outcomes only)
 const OUTCOME_STATUSES=["closed","lost","no_response"];
@@ -112,6 +113,21 @@ const DUMMY_PLAN = {
 
 
 const BLANK_CALL={id:"",date:new Date().toISOString().split("T")[0],outcome:"full",duration:"",notes:"",rawTranscript:"",summary:null};
+
+const addBusinessDays=(dateStr,days)=>{
+  const d=new Date(dateStr+"T12:00:00");
+  let added=0;
+  while(added<days){d.setDate(d.getDate()+1);const day=d.getDay();if(day!==0&&day!==6)added++;}
+  return d;
+};
+
+const isReadyForCall=plan=>{
+  if(!plan.outreach?.postcardSent||!plan.outreach?.postcardDate)return false;
+  if(plan.calls&&plan.calls.length>0)return false;
+  if(["closed","lost","no_response"].includes(plan.status))return false;
+  const ready=addBusinessDays(plan.outreach.postcardDate,2);
+  return new Date()>=ready;
+};
 
 const uid=()=>Math.random().toString(36).slice(2,10);
 const toTitleCase=str=>{
@@ -286,7 +302,7 @@ ${a.diagnosticNote?`<div style="margin-top:20px;padding:8px 12px;background:#f8f
 }
 
 
-function Badge({status}){const c=STATUSES[status]||STATUSES.new;return <span style={{display:"inline-block",padding:"2px 10px",borderRadius:20,fontSize:11,fontWeight:500,background:c.bg,color:c.color}}>{c.label}</span>;}
+function Badge({status,plan}){const computedStatus=plan&&isReadyForCall(plan)?"ready_for_call":status;const c=STATUSES[computedStatus]||STATUSES.new;return <span style={{display:"inline-block",padding:"2px 10px",borderRadius:20,fontSize:11,fontWeight:500,background:c.bg,color:c.color}}>{c.label}</span>;}
 
 function Btn({children,onClick,variant="primary",small,disabled,icon,full}){
   const base={display:"inline-flex",alignItems:"center",gap:6,cursor:disabled?"not-allowed":"pointer",fontFamily:"inherit",fontWeight:500,border:"none",borderRadius:6,fontSize:small?11:13,padding:small?"4px 10px":"8px 16px",opacity:disabled?0.5:1,transition:"opacity 0.15s",width:full?"100%":undefined,justifyContent:full?"center":undefined};
@@ -561,7 +577,7 @@ function Dashboard({plans,onSelect,onNew}){
                       <div style={{fontWeight:500,color:INK,fontSize:13}}>{p.company}</div>
                       {p.ein&&<div style={{fontSize:11,color:MUTED,marginTop:1}}>EIN: {p.ein}</div>}
                     </td>
-                    <td style={{padding:"12px 14px"}}><Badge status={p.status}/></td>
+                    <td style={{padding:"12px 14px"}}><Badge status={p.status} plan={p}/></td>
                     <td style={{padding:"12px 14px",fontFamily:"'IBM Plex Sans'",fontSize:13,fontWeight:500,color:INK,fontFeatureSettings:'"tnum" 1',whiteSpace:"nowrap"}}>{p.assets?fmtF(Number(p.assets)):"—"}</td>
                     <td style={{padding:"12px 14px",fontFamily:"'IBM Plex Sans'",fontSize:13,color:INK}}>{p.participants?Number(p.participants).toLocaleString():"—"}</td>
                     <td style={{padding:"12px 14px",fontFamily:"'IBM Plex Sans'",fontSize:13,color:INK,whiteSpace:"nowrap"}}>{p.avgBalance?fmtF(Number(p.avgBalance)):"—"}</td>
