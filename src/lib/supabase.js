@@ -60,3 +60,13 @@ export async function dbSaveSettings(settings, userId) {
     .upsert({ user_id: userId, data: settings, updated_at: new Date().toISOString() });
   if (error) throw error;
 }
+
+export async function dbLoadPlan(planId) {
+  const { data, error } = await supabase
+    .from('plans')
+    .select('data')
+    .eq('id', planId)
+    .single();
+  if (error) throw error;
+  return data?.data || null;
+}

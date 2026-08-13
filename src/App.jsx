@@ -4,7 +4,7 @@ import {
   Edit3, Save, X, Loader2, Phone, Mail, BarChart3, ExternalLink,
   Check, Copy, Settings, MessageSquare, ChevronDown, ChevronUp, AlertCircle
 } from "lucide-react";
-import { supabase, dbLoadPlans, dbSavePlan, dbSavePlans, dbDeletePlan, dbLoadSettings, dbSaveSettings } from "./lib/supabase.js";
+import { supabase, dbLoadPlans, dbLoadPlan, dbSavePlan, dbSavePlans, dbDeletePlan, dbLoadSettings, dbSaveSettings } from "./lib/supabase.js";
 const MODEL = "claude-sonnet-4-6";
 const BLUE="#29aae2",INK="#293132",BODY="#3d4f60",MUTED="#8a9bb0",RULE="#e2e8ed",FILL="#f5f7f9",GREEN="#16a34a",AMBER="#d97706",RED="#c0392b";
 
@@ -402,7 +402,12 @@ function SettingsView({settings,onSave}){
       <h2 style={{fontFamily:"'Syne',sans-serif",fontSize:20,fontWeight:700,color:INK,marginBottom:6}}>Settings</h2>
       <p style={{fontSize:13,color:MUTED,marginBottom:24}}>Matt's contact info populates all generated documents automatically.</p>
       <Card style={{maxWidth:580}}>
-        <SectionHead>Contact Information</SectionHead>
+        <SectionHead>Your Profile</SectionHead>
+        <p style={{fontSize:12,color:MUTED,marginBottom:12,lineHeight:1.5}}>Your display name appears next to outreach steps you complete — visible to your whole team.</p>
+        <Field label="Your Name" value={local.profileName||""} onChange={v=>setLocal({...local,profileName:v})} placeholder="e.g. Matt or Garrett"/>
+        <div style={{height:20}}/>
+        <SectionHead>Document Settings</SectionHead>
+        <p style={{fontSize:12,color:MUTED,marginBottom:12,lineHeight:1.5}}>This information appears on generated client letters.</p>
         <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
           <Field label="Full Name"    value={s.name}     onChange={set("name")}     placeholder="Matt Hightower"              half/>
           <Field label="Title"        value={s.title}    onChange={set("title")}    placeholder="401(k) Plan Consultant"      half/>
@@ -609,7 +614,7 @@ function PlanDetail({plan,onBack,onUpdate,onEdit,settings}){
   const mark=(field,dateField)=>{
     const today=new Date().toISOString().split("T")[0];
     const nextStatus=plan.status==="new"?"in_progress":plan.status;
-    const byName=settings?.name||"";
+    const byName=settings?.profileName||settings?.name||"";
     onUpdate({...plan,status:nextStatus,outreach:{
       ...plan.outreach,
       [field]:true,
@@ -782,7 +787,7 @@ function PlanDetail({plan,onBack,onUpdate,onEdit,settings}){
             <Step num={3} label={`Phone call${plan.calls?.length?" ("+plan.calls.length+" logged)":""}`} done={(plan.calls?.length||0)>0} date={plan.calls?.[0]?.date}
               extra={<div style={{marginTop:5}}><Btn onClick={()=>setShowCallForm(true)} small variant="secondary" icon={<Phone size={10}/>}>{plan.calls?.length?"Log Another":"Log Call"}</Btn></div>}/>
             <Step num={4} label="Email sent" done={plan.outreach?.emailSent} date={plan.outreach?.emailDate} by={plan.outreach?.emailSentBy} onMark={()=>mark("emailSent","emailDate")}/>
-            <div style={{borderBottom:"none"}}><Step num={5} label="Letter mailed" done={plan.outreach?.letterSent} date={plan.outreach?.letterDate} by={plan.outreach?.letterSentBy} onMark={()=>mark("letterSent","letterDate")}/></div>
+            <div style={{borderBottom:"none"}}><Step num={5} label="Benchmarking report mailed" done={plan.outreach?.letterSent} date={plan.outreach?.letterDate} by={plan.outreach?.letterSentBy} onMark={()=>mark("letterSent","letterDate")}/></div>
           </Card>
 
           <Card>
@@ -1416,6 +1421,7 @@ export default function App(){
     setPlans(n);
     const uid=userIdRef.current;
     if(uid){try{await dbSavePlan(p,uid);setSaveError(null);}catch(e){console.error("Save plan error:",e);setSaveError("Save failed: "+e.message);}}
+    try{const fresh=await dbLoadPlan(p.id);if(fresh){setPlans(prev=>prev.map(x=>x.id===fresh.id?fresh:x));setSelected(fresh);setView("detail");return;}}catch(e){console.error("Plan refresh error:",e);}
     setSelected(p);setView("detail");
   };
   const handleDelete=async()=>{
@@ -1462,7 +1468,7 @@ export default function App(){
           ?<div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"80px 0",color:MUTED,gap:8}}><Loader2 size={18} style={{animation:"spin 1s linear infinite"}}/>Loading...</div>
           :navTab==="prospect"?<ProspectTab plans={plans} onAddPlans={handleAddPlans} targets={prospectTargets} onTargetsChange={setProspectTargets} sizeFilter={prospectSizeFilter} onSizeFilterChange={setProspectSizeFilter} results={prospectResults} onResultsChange={setProspectResults}/>
           :navTab==="settings"?<SettingsView settings={settings} onSave={persistSettings}/>
-          :view==="dashboard"?<Dashboard plans={plans} onSelect={p=>{setSelected(p);setView("detail");}} onNew={()=>setView("new")}/>
+          :view==="dashboard"?<Dashboard plans={plans} onSelect={async p=>{try{const fresh=await dbLoadPlan(p.id);if(fresh){setPlans(prev=>prev.map(x=>x.id===fresh.id?fresh:x));setSelected(fresh);setView("detail");return;}}catch(e){}setSelected(p);setView("detail");}} onNew={()=>setView("new")}/>
           :view==="new"?<PlanForm onSave={handleSave} onCancel={()=>setView("dashboard")}/>
           :view==="edit"&&live?<PlanForm initial={live} onSave={handleSave} onCancel={()=>setView("detail")} onDelete={handleDelete}/>
           :view==="detail"&&live?<PlanDetail plan={live} onBack={()=>setView("dashboard")} onUpdate={handleUpdate} onEdit={()=>setView("edit")} settings={settings}/>
