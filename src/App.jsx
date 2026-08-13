@@ -404,7 +404,7 @@ function SettingsView({settings,onSave}){
       <Card style={{maxWidth:580}}>
         <SectionHead>Your Profile</SectionHead>
         <p style={{fontSize:12,color:MUTED,marginBottom:12,lineHeight:1.5}}>Your display name appears next to outreach steps you complete — visible to your whole team.</p>
-        <Field label="Your Name" value={local.profileName||""} onChange={v=>setLocal({...local,profileName:v})} placeholder="e.g. Matt or Garrett"/>
+        <Field label="Your Name" value={s.profileName||""} onChange={set("profileName")} placeholder="e.g. Matt or Garrett"/>
         <div style={{height:20}}/>
         <SectionHead>Document Settings</SectionHead>
         <p style={{fontSize:12,color:MUTED,marginBottom:12,lineHeight:1.5}}>This information appears on generated client letters.</p>
